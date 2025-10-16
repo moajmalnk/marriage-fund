@@ -64,10 +64,10 @@ const Payments = () => {
     : mockPayments.filter(p => p.user_id === currentUser.id);
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-4 sm:space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Payment Management</h1>
-        <p className="text-muted-foreground">Record and view payment history</p>
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Payment Management</h1>
+        <p className="text-sm sm:text-base text-muted-foreground">Record and view payment history</p>
       </div>
 
       {/* Record Payment Form - Only for Admin and Responsible Members */}
@@ -86,14 +86,14 @@ const Payments = () => {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleRecordPayment} className="space-y-4">
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div className="space-y-2">
-                  <Label htmlFor="member">Select Member</Label>
+                  <Label htmlFor="member" className="text-sm">Select Member</Label>
                   <Select value={selectedMember} onValueChange={setSelectedMember}>
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Choose a member" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-popover">
                       {availableMembers.map(member => (
                         <SelectItem key={member.id} value={member.id}>
                           {member.name} (₹{member.assigned_monthly_amount})
@@ -103,17 +103,18 @@ const Payments = () => {
                   </Select>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="amount">Amount (₹)</Label>
+                  <Label htmlFor="amount" className="text-sm">Amount (₹)</Label>
                   <Input
                     id="amount"
                     type="number"
                     placeholder="Enter amount"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
+                    className="w-full"
                   />
                 </div>
               </div>
-              <Button type="submit" className="w-full md:w-auto">
+              <Button type="submit" className="w-full sm:w-auto">
                 Record Payment
               </Button>
             </form>
@@ -124,28 +125,28 @@ const Payments = () => {
       {/* Payment History */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <History className="h-5 w-5" />
-            Payment History
+          <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <History className="h-5 w-5 shrink-0" />
+            <span>Payment History</span>
           </CardTitle>
-          <CardDescription>Complete transaction log with timestamps</CardDescription>
+          <CardDescription className="text-xs sm:text-sm">Complete transaction log with timestamps</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border overflow-auto">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Time</TableHead>
-                  <TableHead>Member</TableHead>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Recorded By</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Date</TableHead>
+                  <TableHead className="text-xs sm:text-sm hidden sm:table-cell">Time</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Member</TableHead>
+                  <TableHead className="text-xs sm:text-sm">Amount</TableHead>
+                  <TableHead className="text-xs sm:text-sm hidden md:table-cell">Recorded By</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {visiblePayments.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={5} className="text-center py-8 text-xs sm:text-sm text-muted-foreground">
                       No payment records found
                     </TableCell>
                   </TableRow>
@@ -154,15 +155,15 @@ const Payments = () => {
                     const member = mockUsers.find(u => u.id === payment.user_id);
                     return (
                       <TableRow key={payment.id}>
-                        <TableCell className="font-medium">{payment.date}</TableCell>
-                        <TableCell>{payment.time}</TableCell>
-                        <TableCell>{member?.name}</TableCell>
+                        <TableCell className="font-medium text-xs sm:text-sm">{payment.date}</TableCell>
+                        <TableCell className="text-xs sm:text-sm hidden sm:table-cell">{payment.time}</TableCell>
+                        <TableCell className="text-xs sm:text-sm">{member?.name}</TableCell>
                         <TableCell>
-                          <Badge variant="outline" className="bg-success/10 text-success border-success">
+                          <Badge variant="outline" className="bg-success/10 text-success border-success text-xs whitespace-nowrap">
                             ₹{payment.amount.toLocaleString('en-IN')}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-muted-foreground">{payment.recorded_by_name}</TableCell>
+                        <TableCell className="text-xs sm:text-sm text-muted-foreground hidden md:table-cell">{payment.recorded_by_name}</TableCell>
                       </TableRow>
                     );
                   })
