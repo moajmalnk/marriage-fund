@@ -9,6 +9,8 @@ import Dashboard from "./pages/Dashboard";
 import Payments from "./pages/Payments";
 import Team from "./pages/Team";
 import FundRequests from "./pages/FundRequests";
+import Profile from "./pages/Profile";
+import ManageUsers from "./pages/ManageUsers";
 import Layout from "./components/Layout";
 import NotFound from "./pages/NotFound";
 
@@ -28,6 +30,8 @@ const App = () => (
             <Route path="/payments" element={<Layout><Payments /></Layout>} />
             <Route path="/team" element={<Layout><Team /></Layout>} />
             <Route path="/fund-requests" element={<Layout><FundRequests /></Layout>} />
+            <Route path="/profile" element={<Layout><Profile /></Layout>} />
+            <Route path="/manage-users" element={<Layout><ManageUsers /></Layout>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

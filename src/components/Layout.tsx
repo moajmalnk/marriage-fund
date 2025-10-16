@@ -1,7 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate, Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, CreditCard, Users, FileText, LogOut } from 'lucide-react';
+import { LayoutDashboard, CreditCard, Users, FileText, LogOut, UserCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 interface LayoutProps {
@@ -16,7 +16,15 @@ const Layout = ({ children }: LayoutProps) => {
     return <Navigate to="/login" />;
   }
 
-  const navigation = [
+  const adminNavigation = [
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
+    { name: 'Payments', href: '/payments', icon: CreditCard },
+    { name: 'Team', href: '/team', icon: Users },
+    { name: 'Fund Requests', href: '/fund-requests', icon: FileText },
+    { name: 'Manage Users', href: '/manage-users', icon: Users },
+  ];
+
+  const navigation = currentUser.role === 'admin' ? adminNavigation : [
     { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
     { name: 'Payments', href: '/payments', icon: CreditCard },
     { name: 'Team', href: '/team', icon: Users },
@@ -61,14 +69,25 @@ const Layout = ({ children }: LayoutProps) => {
             <p className="text-sm font-medium">{currentUser.name}</p>
             <p className="text-xs text-muted-foreground capitalize">{currentUser.role.replace('_', ' ')}</p>
           </div>
-          <Button
-            variant="outline"
-            className="w-full justify-start"
-            onClick={logout}
-          >
-            <LogOut className="mr-2 h-4 w-4" />
-            Logout
-          </Button>
+          <div className="space-y-2">
+            <Link to="/profile">
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+              >
+                <UserCircle className="mr-2 h-4 w-4" />
+                My Profile
+              </Button>
+            </Link>
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={logout}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Logout
+            </Button>
+          </div>
         </div>
       </aside>
 
