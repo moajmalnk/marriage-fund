@@ -108,4 +108,10 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Privacy mode blur effect */
+  body.privacy-blur > #root {
+    filter: blur(10px);
+    transition: filter 0.2s ease-in-out;
+  }
 }

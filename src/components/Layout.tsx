@@ -2,6 +2,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Navigate, Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { LayoutDashboard, CreditCard, Users, FileText, LogOut, UserCircle } from 'lucide-react';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { cn } from '@/lib/utils';
 
 interface LayoutProps {
@@ -36,7 +37,10 @@ const Layout = ({ children }: LayoutProps) => {
       {/* Sidebar */}
       <aside className="w-full md:w-64 bg-card border-r">
         <div className="p-6">
-          <h2 className="text-xl font-bold text-primary">CBMS Fund</h2>
+          <div className="flex items-center justify-between mb-1">
+            <h2 className="text-xl font-bold text-primary">CBMS Fund</h2>
+            <ThemeToggle />
+          </div>
           <p className="text-sm text-muted-foreground mt-1">Marriage Support</p>
         </div>
 
