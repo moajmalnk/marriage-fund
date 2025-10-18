@@ -54,6 +54,7 @@ export const mockPayments: Payment[] = [
   { id: 'p6', user_id: '19', amount: 70000, date: '2025-01-19', time: '01:20 PM', recorded_by: '5', recorded_by_name: 'Fawaz' },
   { id: 'p7', user_id: '21', amount: 70000, date: '2025-01-20', time: '10:00 AM', recorded_by: '6', recorded_by_name: 'Basil' },
   { id: 'p8', user_id: '23', amount: 70000, date: '2025-01-21', time: '04:45 PM', recorded_by: '7', recorded_by_name: 'Mubashir' },
+  { id: 'p9', user_id: '25', amount: 70000, date: '2025-01-22', time: '02:30 PM', recorded_by: '7', recorded_by_name: 'Salman' },
 ];
 
 // Mock Fund Requests

@@ -200,94 +200,169 @@ const Team = () => {
           const leaderTotalPaid = getUserTotalContributed(team.responsible_member.id);
           const leaderMarriageAmount = 120000;
           const leaderToCollect = leaderMarriageAmount - leaderTotalPaid;
-          const leaderPaidThisMonth = hasUserPaidThisMonth(team.responsible_member.id);
+          
+          // Calculate team totals
+          const teamMembersTotalPaid = team.members.reduce((sum, member) => sum + getUserTotalContributed(member.id), 0);
+          const teamTotalPaid = leaderTotalPaid + teamMembersTotalPaid;
+          const teamTotalTarget = (team.members.length + 1) * 120000; // Leader + all members
+          const teamTotalToCollect = teamTotalTarget - teamTotalPaid;
 
           return (
             <Card key={team.responsible_member.id}>
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                      <Award className="h-6 w-6 text-primary" />
+                {/* Responsible Member Card */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg p-4 border border-blue-200 dark:border-blue-700 mb-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                        <Award className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-slate-900 dark:text-slate-100 text-lg">{team.responsible_member.name}</p>
+                        <p className="text-sm text-slate-600 dark:text-slate-400">Responsible Member - {team.responsible_member.marital_status}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xl font-bold text-green-600 dark:text-green-400">
+                        ₹{leaderTotalPaid.toLocaleString('en-IN')}
+                      </p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400">Paid</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Target</p>
+                      <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                        ₹{leaderMarriageAmount.toLocaleString('en-IN')}
+                      </p>
                     </div>
                     <div>
-                      <CardTitle className="text-lg">{team.responsible_member.name}</CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        Responsible Member - {team.responsible_member.marital_status}
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">To Collect</p>
+                      <p className="text-sm font-semibold text-orange-600 dark:text-orange-400">
+                        ₹{leaderToCollect.toLocaleString('en-IN')}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Progress</p>
+                      <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                        {((leaderTotalPaid / leaderMarriageAmount) * 100).toFixed(1)}%
                       </p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium">₹{leaderTotalPaid.toLocaleString('en-IN')}</span>
-                      {leaderPaidThisMonth ? (
-                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-xs">
-                          <CheckCircle className="mr-1 h-3 w-3" />
-                          Paid
-                        </Badge>
-                      ) : (
-                        <Badge variant="destructive" className="text-xs">
-                          <XCircle className="mr-1 h-3 w-3" />
-                          Pending
-                        </Badge>
-                      )}
+                  
+                  <div className="mt-3">
+                    <div className="flex justify-between text-xs text-slate-600 dark:text-slate-400 mb-1">
+                      <span>Progress</span>
+                      <span>{((leaderTotalPaid / leaderMarriageAmount) * 100).toFixed(1)}%</span>
                     </div>
-                    <p className="text-xs text-muted-foreground">
-                      Target: ₹{leaderMarriageAmount.toLocaleString('en-IN')}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      To Collect: ₹{leaderToCollect.toLocaleString('en-IN')}
-                    </p>
+                    <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                      <div 
+                        className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min((leaderTotalPaid / leaderMarriageAmount) * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Team Totals */}
+                <div className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Team Totals ({team.members.length + 1} members)
+                  </h4>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Total Target</p>
+                      <p className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                        ₹{teamTotalTarget.toLocaleString('en-IN')}
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Total Paid</p>
+                      <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                        ₹{teamTotalPaid.toLocaleString('en-IN')}
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">To Collect</p>
+                      <p className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                        ₹{teamTotalToCollect.toLocaleString('en-IN')}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3 ml-6 border-l-2 border-border pl-6">
-                  <h4 className="text-sm font-medium text-muted-foreground mb-3">
-                    Team Members ({team.members.length})
+                <div className="space-y-4">
+                  <h4 className="text-sm font-medium text-muted-foreground mb-4 flex items-center gap-2">
+                    <User className="h-4 w-4" />
+                    Individual Members ({team.members.length})
                   </h4>
-                  {team.members.map((member) => {
-                    const memberTotalPaid = getUserTotalContributed(member.id);
-                    const memberMarriageAmount = 120000;
-                    const memberToCollect = memberMarriageAmount - memberTotalPaid;
-                    const memberPaidThisMonth = hasUserPaidThisMonth(member.id);
+                  <div className="grid gap-3">
+                    {team.members.map((member) => {
+                      const memberTotalPaid = getUserTotalContributed(member.id);
+                      const memberMarriageAmount = 120000;
+                      const memberToCollect = memberMarriageAmount - memberTotalPaid;
+                      const memberProgress = (memberTotalPaid / memberMarriageAmount) * 100;
 
-                    return (
-                      <div key={member.id} className="flex items-center justify-between p-3 rounded-lg border bg-muted/30 hover:bg-muted/50 transition-colors">
-                        <div className="flex items-center gap-3">
-                          <div className="h-8 w-8 rounded-full bg-background flex items-center justify-center">
-                            <User className="h-4 w-4 text-muted-foreground" />
+                      return (
+                        <div key={member.id} className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-700/50 rounded-lg p-4 border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all">
+                          <div className="flex items-center justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                                <User className="h-5 w-5 text-primary" />
+                              </div>
+                              <div>
+                                <p className="font-semibold text-slate-900 dark:text-slate-100">{member.name}</p>
+                                <p className="text-sm text-slate-600 dark:text-slate-400">{member.marital_status}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                                ₹{memberTotalPaid.toLocaleString('en-IN')}
+                              </p>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">Paid</p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="font-medium text-sm">{member.name}</p>
-                            <p className="text-xs text-muted-foreground">{member.marital_status}</p>
+                          
+                          <div className="grid grid-cols-3 gap-4 text-center">
+                            <div>
+                              <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Target</p>
+                              <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                ₹{memberMarriageAmount.toLocaleString('en-IN')}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">To Collect</p>
+                              <p className="text-sm font-semibold text-orange-600 dark:text-orange-400">
+                                ₹{memberToCollect.toLocaleString('en-IN')}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Progress</p>
+                              <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                                {memberProgress.toFixed(1)}%
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="mt-3">
+                            <div className="flex justify-between text-xs text-slate-600 dark:text-slate-400 mb-1">
+                              <span>Progress</span>
+                              <span>{memberProgress.toFixed(1)}%</span>
+                            </div>
+                            <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                              <div 
+                                className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-300"
+                                style={{ width: `${Math.min(memberProgress, 100)}%` }}
+                              ></div>
+                            </div>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm font-medium">₹{memberTotalPaid.toLocaleString('en-IN')}</span>
-                            {memberPaidThisMonth ? (
-                              <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-xs">
-                                <CheckCircle className="mr-1 h-2.5 w-2.5" />
-                                Paid
-                              </Badge>
-                            ) : (
-                              <Badge variant="destructive" className="text-xs">
-                                <XCircle className="mr-1 h-2.5 w-2.5" />
-                                Pending
-                              </Badge>
-                            )}
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            Target: ₹{memberMarriageAmount.toLocaleString('en-IN')}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            To Collect: ₹{memberToCollect.toLocaleString('en-IN')}
-                          </p>
-                        </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
                 </div>
               </CardContent>
             </Card>
