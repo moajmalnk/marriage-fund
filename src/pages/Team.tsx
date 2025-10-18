@@ -1,7 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getTeamStructure, getUserTotalContributed, hasUserPaidThisMonth, mockUsers, getTotalCollected, getTotalSpent } from '@/lib/mockData';
-import { User, CheckCircle, XCircle, Award, Users, Wallet, TrendingUp, Calendar, Plus, MessageSquare, CreditCard, DollarSign } from 'lucide-react';
+import { User, CheckCircle, XCircle, Award, Users, Wallet, TrendingUp, Calendar, Plus, MessageSquare, CreditCard, DollarSign, Heart } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,12 @@ const Team = () => {
     notes: ''
   });
   const [isSubmittingWallet, setIsSubmittingWallet] = useState(false);
+  const [fundRequestFormData, setFundRequestFormData] = useState({
+    amount: '',
+    reason: '',
+    detailedReason: ''
+  });
+  const [isSubmittingFundRequest, setIsSubmittingFundRequest] = useState(false);
   
   if (isLoading) {
     return (
@@ -52,6 +58,14 @@ const Team = () => {
   // Wallet deposit handlers
   const handleWalletInputChange = (field: string, value: string) => {
     setWalletFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Fund request handlers
+  const handleFundRequestInputChange = (field: string, value: string) => {
+    setFundRequestFormData(prev => ({
       ...prev,
       [field]: value
     }));
@@ -90,6 +104,37 @@ const Team = () => {
     }
   };
 
+  const handleFundRequestSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmittingFundRequest(true);
+
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      console.log('Fund request submitted:', {
+        user: currentUser.name,
+        amount: fundRequestFormData.amount,
+        reason: fundRequestFormData.reason,
+        detailedReason: fundRequestFormData.detailedReason
+      });
+
+      // Reset form and close modal
+      setFundRequestFormData({
+        amount: '',
+        reason: '',
+        detailedReason: ''
+      });
+      setShowFundRequestModal(false);
+      
+      console.log('Fund request submitted successfully!');
+    } catch (error) {
+      console.error('Error submitting fund request:', error);
+    } finally {
+      setIsSubmittingFundRequest(false);
+    }
+  };
+
 
   return (
     <div className="space-y-4 sm:space-y-6 animate-fade-in">
@@ -101,13 +146,16 @@ const Team = () => {
         </div>
         <div className="flex gap-2">
           {canRequestFunds && (
-            <Button 
-              onClick={() => setShowFundRequestModal(true)}
-              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Request Fund
-            </Button>
+            <Dialog open={showFundRequestModal} onOpenChange={setShowFundRequestModal}>
+              <DialogTrigger asChild>
+                <Button 
+                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Request Fund
+                </Button>
+              </DialogTrigger>
+            </Dialog>
           )}
           {canDepositWallet && (
             <Dialog open={showWalletModal} onOpenChange={setShowWalletModal}>
@@ -448,18 +496,110 @@ const Team = () => {
         })}
       </div>
 
-      {/* Fund Request Modal Placeholder */}
-      {showFundRequestModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-md p-6">
-            <h3 className="text-lg font-semibold mb-4">Request Fund</h3>
-            <p className="text-muted-foreground mb-4">Fund request functionality will be implemented here.</p>
-            <Button onClick={() => setShowFundRequestModal(false)} className="w-full">
-              Close
-            </Button>
+      {/* Fund Request Dialog */}
+      <Dialog open={showFundRequestModal} onOpenChange={setShowFundRequestModal}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-blue-500 text-white">
+                <Heart className="h-5 w-5" />
+              </div>
+              Request Fund
+            </DialogTitle>
+            <DialogDescription>
+              Submit a request for marriage fund assistance from the community.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="fund-amount" className="text-sm font-medium">
+                  Requested Amount (₹)
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 dark:text-slate-400">₹</span>
+                  <Input
+                    id="fund-amount"
+                    type="number"
+                    placeholder="Enter amount (max ₹120,000)"
+                    value={fundRequestFormData.amount}
+                    onChange={(e) => handleFundRequestInputChange('amount', e.target.value)}
+                    className="h-12 pl-10 border-slate-300 focus:border-blue-500"
+                    required
+                    min="1"
+                    max="120000"
+                    disabled={isSubmittingFundRequest}
+                  />
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Maximum amount per request: ₹120,000
+                </p>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="fund-reason" className="text-sm font-medium">
+                  Reason for Request
+                </Label>
+                <Select
+                  value={fundRequestFormData.reason}
+                  onValueChange={(value) => handleFundRequestInputChange('reason', value)}
+                  disabled={isSubmittingFundRequest}
+                >
+                  <SelectTrigger className="h-12 border-slate-300 focus:border-blue-500">
+                    <SelectValue placeholder="Select reason for fund request" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="marriage">Marriage Expenses</SelectItem>
+                    <SelectItem value="medical">Medical Emergency</SelectItem>
+                    <SelectItem value="education">Education Expenses</SelectItem>
+                    <SelectItem value="family_emergency">Family Emergency</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="fund-detailed-reason" className="text-sm font-medium">
+                  Detailed Explanation
+                </Label>
+                <Textarea
+                  id="fund-detailed-reason"
+                  placeholder="Please provide detailed information about your fund request..."
+                  value={fundRequestFormData.detailedReason}
+                  onChange={(e) => handleFundRequestInputChange('detailedReason', e.target.value)}
+                  className="min-h-[100px] border-slate-300 focus:border-blue-500"
+                  required
+                  disabled={isSubmittingFundRequest}
+                />
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowFundRequestModal(false)}
+              disabled={isSubmittingFundRequest}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleFundRequestSubmit}
+              disabled={isSubmittingFundRequest || !fundRequestFormData.amount || !fundRequestFormData.reason || !fundRequestFormData.detailedReason}
+              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white"
+            >
+              {isSubmittingFundRequest ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <Heart className="h-4 w-4 mr-2" />
+                  Submit Request
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Wallet Deposit Dialog */}
       <Dialog open={showWalletModal} onOpenChange={setShowWalletModal}>

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { X, Save, Trash2, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Save, Trash2, AlertTriangle, CheckCircle2, CreditCard, Edit } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import DatePicker from '@/components/ui/date-picker';
 import { Badge } from '@/components/ui/badge';
 
@@ -149,55 +150,39 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     }
   };
 
-  if (!isOpen) return null;
-
   const selectedUser = users.find(u => u.id === formData.user_id);
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
-      <div className="bg-white dark:bg-slate-900 rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-200 dark:border-slate-700">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
-            <div className={`p-1.5 sm:p-2 rounded-lg sm:rounded-xl flex-shrink-0 ${
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <div className={`p-2 rounded-lg ${
               mode === 'create' ? 'bg-green-500' : 
               mode === 'edit' ? 'bg-blue-500' : 'bg-red-500'
-            } text-white shadow-lg`}>
+            } text-white`}>
               {mode === 'create' ? (
-                <CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                <CheckCircle2 className="h-5 w-5" />
               ) : mode === 'edit' ? (
-                <Save className="h-4 w-4 sm:h-5 sm:w-5" />
+                <Edit className="h-5 w-5" />
               ) : (
-                <Trash2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                <Trash2 className="h-5 w-5" />
               )}
             </div>
-            <div className="min-w-0 flex-1">
-              <h2 className="text-lg sm:text-xl font-bold text-slate-900 dark:text-slate-100 truncate">
-                {mode === 'create' ? 'Record New Payment' : 
-                 mode === 'edit' ? 'Edit Payment' : 'Delete Payment'}
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 truncate">
-                {mode === 'create' ? 'Add a new payment record to the system' :
-                 mode === 'edit' ? 'Update payment information' :
-                 'Are you sure you want to delete this payment?'}
-              </p>
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onClose}
-            className="rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 flex-shrink-0 ml-2"
-          >
-            <X className="h-4 w-4 sm:h-5 sm:w-5" />
-          </Button>
-        </div>
-
-        {/* Content */}
-        <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(95vh-140px)] sm:max-h-[calc(90vh-140px)]">
+            {mode === 'create' ? 'Record New Payment' : 
+             mode === 'edit' ? 'Edit Payment' : 'Delete Payment'}
+          </DialogTitle>
+          <DialogDescription>
+            {mode === 'create' ? 'Add a new payment record to the system' :
+             mode === 'edit' ? 'Update payment information' :
+             'Are you sure you want to delete this payment?'}
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="grid gap-4 py-4">
           {mode === 'delete' ? (
             /* Delete Confirmation */
-            <div className="space-y-6">
+            <div className="space-y-4">
               <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800">
                 <div className="flex items-center gap-3">
                   <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
@@ -213,34 +198,32 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               </div>
 
               {payment && (
-                <div className="space-y-4">
-                  <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
-                    <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-3">Payment Details</h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <span className="text-slate-600 dark:text-slate-400">Member:</span>
-                        <p className="font-medium text-slate-900 dark:text-slate-100">
-                          {users.find(u => u.id === payment.user_id)?.name}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-slate-600 dark:text-slate-400">Amount:</span>
-                        <p className="font-medium text-slate-900 dark:text-slate-100">
-                          ₹{payment.amount.toLocaleString('en-IN')}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-slate-600 dark:text-slate-400">Date:</span>
-                        <p className="font-medium text-slate-900 dark:text-slate-100">
-                          {payment.date}
-                        </p>
-                      </div>
-                      <div>
-                        <span className="text-slate-600 dark:text-slate-400">Time:</span>
-                        <p className="font-medium text-slate-900 dark:text-slate-100">
-                          {payment.time}
-                        </p>
-                      </div>
+                <div className="p-4 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+                  <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-3">Payment Details</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-slate-600 dark:text-slate-400">Member:</span>
+                      <p className="font-medium text-slate-900 dark:text-slate-100">
+                        {users.find(u => u.id === payment.user_id)?.name}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600 dark:text-slate-400">Amount:</span>
+                      <p className="font-medium text-slate-900 dark:text-slate-100">
+                        ₹{payment.amount.toLocaleString('en-IN')}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600 dark:text-slate-400">Date:</span>
+                      <p className="font-medium text-slate-900 dark:text-slate-100">
+                        {payment.date}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-slate-600 dark:text-slate-400">Time:</span>
+                      <p className="font-medium text-slate-900 dark:text-slate-100">
+                        {payment.time}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -248,179 +231,165 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             </div>
           ) : (
             /* Create/Edit Form */
-            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-              {/* Member Selection */}
-              <div className="space-y-2 sm:space-y-3">
-                <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  Select Member
-                </Label>
-                <Select 
-                  value={formData.user_id} 
-                  onValueChange={(value) => handleInputChange('user_id', value)}
-                >
-                  <SelectTrigger className={`h-10 sm:h-12 border-2 transition-all duration-200 ${
-                    errors.user_id 
-                      ? 'border-red-300 dark:border-red-700 focus:border-red-500 dark:focus:border-red-400' 
-                      : 'border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400'
-                  }`}>
-                    <SelectValue placeholder="Choose a member" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700">
-                    {users.map(user => (
-                      <SelectItem key={user.id} value={user.id} className="py-2 sm:py-3">
-                        <div className="flex items-center justify-between w-full">
-                          <span className="font-medium text-sm sm:text-base">{user.name}</span>
-                          <Badge variant="outline" className="ml-2 text-xs">
-                            ₹{user.assigned_monthly_amount}/month
-                          </Badge>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.user_id && (
-                  <p className="text-red-600 dark:text-red-400 text-xs sm:text-sm">{errors.user_id}</p>
-                )}
-              </div>
-
-              {/* Amount and Date Row */}
-              <div className="grid gap-4 sm:gap-6 sm:grid-cols-2">
-                <div className="space-y-2 sm:space-y-3">
-                  <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    Payment Amount
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid gap-4">
+                {/* Member Selection */}
+                <div className="grid gap-2">
+                  <Label htmlFor="member" className="text-sm font-medium">
+                    Select Member
                   </Label>
-                  <div className="relative">
-                    <span className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-slate-500 dark:text-slate-400 font-medium text-sm sm:text-base">
-                      ₹
-                    </span>
-                    <Input
-                      type="number"
-                      placeholder="0.00"
-                      value={formData.amount}
-                      onChange={(e) => handleInputChange('amount', e.target.value)}
-                      className={`h-10 sm:h-12 pl-8 sm:pl-10 pr-3 sm:pr-4 border-2 transition-all duration-200 text-sm sm:text-base ${
-                        errors.amount 
-                          ? 'border-red-300 dark:border-red-700 focus:border-red-500 dark:focus:border-red-400' 
-                          : 'border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400'
-                      }`}
-                    />
+                  <Select 
+                    value={formData.user_id} 
+                    onValueChange={(value) => handleInputChange('user_id', value)}
+                  >
+                    <SelectTrigger className={`h-12 border-slate-300 focus:border-blue-500 ${
+                      errors.user_id ? 'border-red-500' : ''
+                    }`}>
+                      <SelectValue placeholder="Choose a member" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {users.map(user => (
+                        <SelectItem key={user.id} value={user.id} className="py-3">
+                          <div className="flex items-center justify-between w-full">
+                            <span className="font-medium">{user.name}</span>
+                            <Badge variant="outline" className="ml-2 text-xs">
+                              ₹{user.assigned_monthly_amount}/month
+                            </Badge>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.user_id && (
+                    <p className="text-red-600 dark:text-red-400 text-sm">{errors.user_id}</p>
+                  )}
+                </div>
+
+                {/* Amount and Date Row */}
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="grid gap-2">
+                    <Label htmlFor="amount" className="text-sm font-medium">
+                      Payment Amount
+                    </Label>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 dark:text-slate-400">₹</span>
+                      <Input
+                        id="amount"
+                        type="number"
+                        placeholder="0.00"
+                        value={formData.amount}
+                        onChange={(e) => handleInputChange('amount', e.target.value)}
+                        className={`h-12 pl-10 border-slate-300 focus:border-blue-500 ${
+                          errors.amount ? 'border-red-500' : ''
+                        }`}
+                      />
+                    </div>
+                    {errors.amount && (
+                      <p className="text-red-600 dark:text-red-400 text-sm">{errors.amount}</p>
+                    )}
                   </div>
-                  {errors.amount && (
-                    <p className="text-red-600 dark:text-red-400 text-xs sm:text-sm">{errors.amount}</p>
-                  )}
+
+                  <div className="grid gap-2">
+                    <Label htmlFor="date" className="text-sm font-medium">
+                      Payment Date
+                    </Label>
+                    <DatePicker
+                      value={formData.date}
+                      onChange={(date) => handleInputChange('date', date)}
+                      placeholder="Select payment date"
+                      error={!!errors.date}
+                    />
+                    {errors.date && (
+                      <p className="text-red-600 dark:text-red-400 text-sm">{errors.date}</p>
+                    )}
+                  </div>
                 </div>
 
-                <div className="space-y-2 sm:space-y-3">
-                  <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                    Payment Date
+                {/* Time */}
+                <div className="grid gap-2">
+                  <Label htmlFor="time" className="text-sm font-medium">
+                    Payment Time
                   </Label>
-                  <DatePicker
-                    value={formData.date}
-                    onChange={(date) => handleInputChange('date', date)}
-                    placeholder="Select payment date"
-                    error={!!errors.date}
-                    className="h-10 sm:h-12"
+                  <Input
+                    id="time"
+                    type="time"
+                    value={formData.time}
+                    onChange={(e) => handleInputChange('time', e.target.value)}
+                    className={`h-12 border-slate-300 focus:border-blue-500 ${
+                      errors.time ? 'border-red-500' : ''
+                    }`}
                   />
-                  {errors.date && (
-                    <p className="text-red-600 dark:text-red-400 text-xs sm:text-sm">{errors.date}</p>
+                  {errors.time && (
+                    <p className="text-red-600 dark:text-red-400 text-sm">{errors.time}</p>
                   )}
                 </div>
-              </div>
 
-              {/* Time */}
-              <div className="space-y-2 sm:space-y-3">
-                <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  Payment Time
-                </Label>
-                <Input
-                  type="time"
-                  value={formData.time}
-                  onChange={(e) => handleInputChange('time', e.target.value)}
-                  className={`h-10 sm:h-12 border-2 transition-all duration-200 text-sm sm:text-base ${
-                    errors.time 
-                      ? 'border-red-300 dark:border-red-700 focus:border-red-500 dark:focus:border-red-400' 
-                      : 'border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400'
-                  }`}
-                />
-                {errors.time && (
-                  <p className="text-red-600 dark:text-red-400 text-xs sm:text-sm">{errors.time}</p>
-                )}
-              </div>
-
-              {/* Notes */}
-              <div className="space-y-2 sm:space-y-3">
-                <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                  Additional Notes (Optional)
-                </Label>
-                <Textarea
-                  placeholder="Add any additional information about this payment..."
-                  value={formData.notes}
-                  onChange={(e) => handleInputChange('notes', e.target.value)}
-                  className="min-h-[80px] sm:min-h-[100px] border-2 border-slate-200 dark:border-slate-700 focus:border-blue-500 dark:focus:border-blue-400 transition-all duration-200 resize-none text-sm sm:text-base"
-                />
+                {/* Notes */}
+                <div className="grid gap-2">
+                  <Label htmlFor="notes" className="text-sm font-medium">
+                    Additional Notes (Optional)
+                  </Label>
+                  <Textarea
+                    id="notes"
+                    placeholder="Add any additional information about this payment..."
+                    value={formData.notes}
+                    onChange={(e) => handleInputChange('notes', e.target.value)}
+                    className="min-h-[100px] border-slate-300 focus:border-blue-500"
+                  />
+                </div>
               </div>
             </form>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-end gap-2 sm:gap-3 p-4 sm:p-6 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
+        <DialogFooter>
           <Button
             variant="outline"
             onClick={onClose}
             disabled={isSubmitting}
-            className="px-4 sm:px-6 py-2 border-2 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-200 text-sm sm:text-base"
           >
             Cancel
           </Button>
           <Button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className={`px-4 sm:px-6 py-2 text-white font-semibold transition-all duration-200 text-sm sm:text-base ${
+            className={`${
               mode === 'create' 
                 ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700' 
                 : mode === 'edit'
                 ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700'
                 : 'bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700'
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
+            } text-white`}
           >
             {isSubmitting ? (
-              <div className="flex items-center gap-1 sm:gap-2">
-                <div className="w-3 h-3 sm:w-4 sm:h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                <span className="hidden sm:inline">
-                  {mode === 'delete' ? 'Deleting...' : 'Saving...'}
-                </span>
-                <span className="sm:hidden">
-                  {mode === 'delete' ? 'Deleting' : 'Saving'}
-                </span>
-              </div>
+              <>
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                {mode === 'delete' ? 'Deleting...' : 'Saving...'}
+              </>
             ) : (
-              <div className="flex items-center gap-1 sm:gap-2">
+              <>
                 {mode === 'create' ? (
                   <>
-                    <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="hidden sm:inline">Record Payment</span>
-                    <span className="sm:hidden">Record</span>
+                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                    Record Payment
                   </>
                 ) : mode === 'edit' ? (
                   <>
-                    <Save className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="hidden sm:inline">Update Payment</span>
-                    <span className="sm:hidden">Update</span>
+                    <Edit className="h-4 w-4 mr-2" />
+                    Update Payment
                   </>
                 ) : (
                   <>
-                    <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
-                    <span className="hidden sm:inline">Delete Payment</span>
-                    <span className="sm:hidden">Delete</span>
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Delete Payment
                   </>
                 )}
-              </div>
+              </>
             )}
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 };
 
