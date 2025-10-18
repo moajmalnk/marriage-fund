@@ -5,12 +5,24 @@ import { User, CheckCircle, XCircle, Award, Users, Wallet, TrendingUp, Calendar,
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useState } from 'react';
 
 const Team = () => {
   const { currentUser, isLoading } = useAuth();
   const [showFundRequestModal, setShowFundRequestModal] = useState(false);
   const [showWalletModal, setShowWalletModal] = useState(false);
+  const [walletFormData, setWalletFormData] = useState({
+    amount: '',
+    paymentMethod: 'bank_transfer',
+    transactionId: '',
+    notes: ''
+  });
+  const [isSubmittingWallet, setIsSubmittingWallet] = useState(false);
   
   if (isLoading) {
     return (
@@ -37,6 +49,48 @@ const Team = () => {
   const canRequestFunds = currentUser.role === 'member' || currentUser.role === 'responsible_member';
   const canDepositWallet = currentUser.role === 'member' || currentUser.role === 'responsible_member';
 
+  // Wallet deposit handlers
+  const handleWalletInputChange = (field: string, value: string) => {
+    setWalletFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const handleWalletSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmittingWallet(true);
+
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      console.log('Wallet deposit submitted:', {
+        user: currentUser.name,
+        amount: walletFormData.amount,
+        paymentMethod: walletFormData.paymentMethod,
+        transactionId: walletFormData.transactionId,
+        notes: walletFormData.notes
+      });
+
+      // Reset form and close modal
+      setWalletFormData({
+        amount: '',
+        paymentMethod: 'bank_transfer',
+        transactionId: '',
+        notes: ''
+      });
+      setShowWalletModal(false);
+      
+      console.log('Wallet deposit request submitted successfully!');
+    } catch (error) {
+      console.error('Error submitting wallet deposit:', error);
+    } finally {
+      setIsSubmittingWallet(false);
+    }
+  };
+
+
   return (
     <div className="space-y-4 sm:space-y-6 animate-fade-in">
       {/* Header */}
@@ -56,14 +110,17 @@ const Team = () => {
             </Button>
           )}
           {canDepositWallet && (
-            <Button 
-              onClick={() => setShowWalletModal(true)}
-              variant="outline"
-              className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-950"
-            >
-              <Wallet className="h-4 w-4 mr-2" />
-              Deposit Wallet
-            </Button>
+            <Dialog open={showWalletModal} onOpenChange={setShowWalletModal}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="outline"
+                  className="border-green-600 text-green-600 hover:bg-green-50 dark:hover:bg-green-950"
+                >
+                  <Wallet className="h-4 w-4 mr-2" />
+                  Deposit Wallet
+                </Button>
+              </DialogTrigger>
+            </Dialog>
           )}
         </div>
       </div>
@@ -210,8 +267,57 @@ const Team = () => {
           return (
             <Card key={team.responsible_member.id}>
               <CardHeader>
-                {/* Responsible Member Card */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg p-4 border border-blue-200 dark:border-blue-700 mb-4">
+                {/* Team Totals - First */}
+                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg p-4 mb-4 border border-blue-200 dark:border-blue-700">
+                  <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
+                    <Users className="h-4 w-4" />
+                    Team Totals ({team.members.length + 1} members)
+                  </h4>
+                  <div className="grid grid-cols-4 gap-4 mb-4">
+                    <div className="text-center">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Total Target</p>
+                      <p className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                        ₹{teamTotalTarget.toLocaleString('en-IN')}
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">To Collect</p>
+                      <p className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                        ₹{teamTotalToCollect.toLocaleString('en-IN')}
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Total Paid</p>
+                      <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                        ₹{teamTotalPaid.toLocaleString('en-IN')}
+                      </p>
+                    </div>
+                    
+                    <div className="text-center">
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Progress</p>
+                      <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                        {((teamTotalPaid / teamTotalTarget) * 100).toFixed(1)}%
+                      </p>
+                    </div>
+                  </div>
+                  
+                  {/* Team Progress Bar */}
+                  <div className="mt-3">
+                    <div className="flex justify-between text-xs text-slate-600 dark:text-slate-400 mb-1">
+                      <span>Team Progress</span>
+                      <span>{((teamTotalPaid / teamTotalTarget) * 100).toFixed(1)}%</span>
+                    </div>
+                    <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3">
+                      <div 
+                        className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-300"
+                        style={{ width: `${Math.min((teamTotalPaid / teamTotalTarget) * 100, 100)}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Responsible Member Card - Second */}
+                <div className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 rounded-lg p-4 border border-slate-200 dark:border-slate-600">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
@@ -264,34 +370,6 @@ const Team = () => {
                     </div>
                   </div>
                 </div>
-                
-                {/* Team Totals */}
-                <div className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 rounded-lg p-4">
-                  <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Team Totals ({team.members.length + 1} members)
-                  </h4>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="text-center">
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Total Target</p>
-                      <p className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                        ₹{teamTotalTarget.toLocaleString('en-IN')}
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Total Paid</p>
-                      <p className="text-lg font-bold text-green-600 dark:text-green-400">
-                        ₹{teamTotalPaid.toLocaleString('en-IN')}
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">To Collect</p>
-                      <p className="text-lg font-bold text-orange-600 dark:text-orange-400">
-                        ₹{teamTotalToCollect.toLocaleString('en-IN')}
-                      </p>
-                    </div>
-                  </div>
-                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -300,13 +378,13 @@ const Team = () => {
                     Individual Members ({team.members.length})
                   </h4>
                   <div className="grid gap-3">
-                    {team.members.map((member) => {
+                  {team.members.map((member) => {
                       const memberTotalPaid = getUserTotalContributed(member.id);
                       const memberMarriageAmount = 120000;
                       const memberToCollect = memberMarriageAmount - memberTotalPaid;
                       const memberProgress = (memberTotalPaid / memberMarriageAmount) * 100;
 
-                      return (
+                    return (
                         <div key={member.id} className="bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-800/50 dark:to-slate-700/50 rounded-lg p-4 border border-slate-200 dark:border-slate-700 hover:shadow-md transition-all">
                           <div className="flex items-center justify-between mb-3">
                             <div className="flex items-center gap-3">
@@ -357,11 +435,11 @@ const Team = () => {
                                 className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-300"
                                 style={{ width: `${Math.min(memberProgress, 100)}%` }}
                               ></div>
-                            </div>
-                          </div>
                         </div>
-                      );
-                    })}
+                        </div>
+                      </div>
+                    );
+                  })}
                   </div>
                 </div>
               </CardContent>
@@ -383,18 +461,120 @@ const Team = () => {
         </div>
       )}
 
-      {/* Wallet Deposit Modal Placeholder */}
-      {showWalletModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-md p-6">
-            <h3 className="text-lg font-semibold mb-4">Deposit to Wallet</h3>
-            <p className="text-muted-foreground mb-4">Wallet deposit functionality will be implemented here.</p>
-            <Button onClick={() => setShowWalletModal(false)} className="w-full">
-              Close
-            </Button>
+      {/* Wallet Deposit Dialog */}
+      <Dialog open={showWalletModal} onOpenChange={setShowWalletModal}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-green-500 text-white">
+                <Wallet className="h-5 w-5" />
+              </div>
+              Deposit to Wallet
+            </DialogTitle>
+            <DialogDescription>
+              Add funds to your personal wallet for future use.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="wallet-amount" className="text-sm font-medium">
+                  Deposit Amount (₹)
+                </Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 dark:text-slate-400">₹</span>
+                  <Input
+                    id="wallet-amount"
+                    type="number"
+                    placeholder="Enter amount"
+                    value={walletFormData.amount}
+                    onChange={(e) => handleWalletInputChange('amount', e.target.value)}
+                    className="h-12 pl-10 border-slate-300 focus:border-green-500"
+                    required
+                    min="1"
+                    disabled={isSubmittingWallet}
+                  />
+                </div>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="wallet-payment-method" className="text-sm font-medium">
+                  Payment Method
+                </Label>
+                <Select
+                  value={walletFormData.paymentMethod}
+                  onValueChange={(value) => handleWalletInputChange('paymentMethod', value)}
+                  disabled={isSubmittingWallet}
+                >
+                  <SelectTrigger className="h-12 border-slate-300 focus:border-green-500">
+                    <SelectValue placeholder="Select payment method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                    <SelectItem value="upi">UPI Payment</SelectItem>
+                    <SelectItem value="credit_card">Credit Card</SelectItem>
+                    <SelectItem value="debit_card">Debit Card</SelectItem>
+                    <SelectItem value="net_banking">Net Banking</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="wallet-transaction-id" className="text-sm font-medium">
+                  Transaction ID / Reference Number
+                </Label>
+                <Input
+                  id="wallet-transaction-id"
+                  type="text"
+                  placeholder="Enter transaction ID or reference number"
+                  value={walletFormData.transactionId}
+                  onChange={(e) => handleWalletInputChange('transactionId', e.target.value)}
+                  className="h-12 border-slate-300 focus:border-green-500"
+                  required
+                  disabled={isSubmittingWallet}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="wallet-notes" className="text-sm font-medium">
+                  Additional Notes (Optional)
+                </Label>
+                <Textarea
+                  id="wallet-notes"
+                  placeholder="Any additional information about this deposit..."
+                  value={walletFormData.notes}
+                  onChange={(e) => handleWalletInputChange('notes', e.target.value)}
+                  className="min-h-[100px] border-slate-300 focus:border-green-500"
+                  disabled={isSubmittingWallet}
+                />
+              </div>
+            </div>
           </div>
-      </div>
-      )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowWalletModal(false)}
+              disabled={isSubmittingWallet}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleWalletSubmit}
+              disabled={isSubmittingWallet || !walletFormData.amount || !walletFormData.transactionId}
+              className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white"
+            >
+              {isSubmittingWallet ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <Wallet className="h-4 w-4 mr-2" />
+                  Submit Deposit
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -69,7 +69,10 @@ export const mockFundRequests: FundRequest[] = [
     repayment_duration: 45,
     requested_date: '2025-01-10',
     reviewed_by: 'Administrator',
-    reviewed_date: '2025-01-12'
+    reviewed_date: '2025-01-12',
+    payment_date: '2025-02-26', // 45 days after approval
+    paid_amount: 120000, // Fully paid
+    payment_status: 'paid'
   },
   {
     id: 'fr2',
@@ -81,7 +84,10 @@ export const mockFundRequests: FundRequest[] = [
     repayment_duration: 45,
     requested_date: '2025-01-15',
     reviewed_by: 'Administrator',
-    reviewed_date: '2025-01-16'
+    reviewed_date: '2025-01-16',
+    payment_date: '2025-03-02', // 45 days after approval
+    paid_amount: 60000, // Partially paid
+    payment_status: 'partial'
   },
   {
     id: 'fr3',
@@ -93,7 +99,10 @@ export const mockFundRequests: FundRequest[] = [
     repayment_duration: 45,
     requested_date: '2025-01-18',
     reviewed_by: 'Administrator',
-    reviewed_date: '2025-01-19'
+    reviewed_date: '2025-01-19',
+    payment_date: '2025-03-05', // 45 days after approval
+    paid_amount: 0, // Not paid yet
+    payment_status: 'pending'
   },
   {
     id: 'fr4',

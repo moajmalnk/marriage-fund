@@ -10,6 +10,9 @@ export interface User {
   marital_status: MaritalStatus;
   assigned_monthly_amount: number;
   responsible_member_id?: string;
+  email?: string;
+  phone?: string;
+  profile_photo?: string;
 }
 
 export interface Payment {
@@ -33,6 +36,9 @@ export interface FundRequest {
   requested_date: string;
   reviewed_by?: string;
   reviewed_date?: string;
+  payment_date?: string; // When payment is scheduled
+  paid_amount?: number; // Amount already paid
+  payment_status?: 'pending' | 'partial' | 'paid'; // Payment status
 }
 
 export interface TeamMember {
