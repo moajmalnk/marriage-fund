@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { cn } from '@/lib/utils';
+import { mockUsers } from '@/lib/mockData';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -66,6 +67,10 @@ const Layout = ({ children }: LayoutProps) => {
     setHasAcknowledgedTerms(true);
     setShowTermsDialog(false);
   };
+
+  // Get responsible members and regular members from actual user data
+  const responsibleMembers = mockUsers.filter(user => user.role === 'responsible_member');
+  const regularMembers = mockUsers.filter(user => user.role === 'member');
 
   // Show loading state while checking authentication
   if (isLoading) {
@@ -440,51 +445,25 @@ const Layout = ({ children }: LayoutProps) => {
                   <div>
                     <h5 className="font-medium text-slate-900 dark:text-slate-100 mb-2">ഉത്തരവാദിത്വമുള്ളവർ (Responsible Members):</h5>
                     <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
-                      <li>• Muhammed Fawas KK</li>
-                      <li>• Muhammed Basil VP</li>
-                      <li>• Muhammed Mubasheer M</li>
-                      <li>• Muhammed Shakir KK</li>
-                      <li>• Muhammed Ajmal NK</li>
-                      <li>• Mohammed Nawas MK</li>
-                      <li>• Mohammed Sabeeh CK</li>
-                      <li>• Muhammed Ameen TP</li>
+                      {responsibleMembers.map((member) => (
+                        <li key={member.id}>• {member.name}</li>
+                      ))}
                     </ul>
                   </div>
                   
                   <div>
                     <h5 className="font-medium text-slate-900 dark:text-slate-100 mb-2">അംഗങ്ങൾ (Members):</h5>
                     <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
-                      <li>• Muhammed Fawas KK</li>
-                      <li>• Muhammed Basil VP</li>
-                      <li>• Muhammed Mubasheer M</li>
-                      <li>• Muhammed Shakir KK</li>
-                      <li>• Muhammed Adhil A</li>
-                      <li>• Mohammed Ajmal P</li>
-                      <li>• Mohammed Ajmal NK</li>
-                      <li>• Mohammed Nawas MK</li>
-                      <li>• Mohammed Sabeeh CK</li>
-                      <li>• Muhammed Ameen TP</li>
-                      <li>• Muhammed Shareef</li>
-                      <li>• Muhammed Ashif PP</li>
-                      <li>• Ali Akbar</li>
-                      <li>• Muhammed Isham</li>
-                      <li>• Junaid PM</li>
-                      <li>• Muhsin</li>
-                      <li>• Muzammil</li>
-                      <li>• Salman</li>
-                      <li>• Shaheer</li>
-                      <li>• Shakir Jamal</li>
-                      <li>• Adhil KP</li>
+                      {regularMembers.map((member) => (
+                        <li key={member.id}>• {member.name}</li>
+                      ))}
                     </ul>
                   </div>
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                   <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                    Approved by: CBMS (Community-Based Mutual Support)
-                  </p>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">
-                    Date: ____________________ | Place: ____________________
+                    Approved by: 
                   </p>
                 </div>
               </div>

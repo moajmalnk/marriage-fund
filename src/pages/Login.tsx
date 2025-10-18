@@ -5,19 +5,22 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Lock, Eye, EyeOff, Shield, Users, Heart } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Lock, Eye, EyeOff, Shield, Users, Heart, AlertCircle } from 'lucide-react';
 
 const Login = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(''); // Clear any previous errors
     
     try {
       // Simulate API call delay
@@ -27,6 +30,7 @@ const Login = () => {
         console.log("Login Successful - Welcome to CBMS Fund Management");
         navigate('/dashboard');
       } else {
+        setError('Invalid username or password. Please check your credentials and try again.');
         console.log("Login Failed - Invalid username or password");
       }
     } finally {
@@ -102,6 +106,14 @@ const Login = () => {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
+                {error && (
+                  <Alert variant="destructive" className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/30">
+                    <AlertCircle className="h-4 w-4" />
+                    <AlertDescription className="text-red-800 dark:text-red-200">
+                      {error}
+                    </AlertDescription>
+                  </Alert>
+                )}
                 <div className="space-y-2">
                   <Label htmlFor="username" className="text-sm font-medium text-slate-700 dark:text-slate-300">
                     Username

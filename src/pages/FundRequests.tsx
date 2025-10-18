@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { mockFundRequests, getTotalSpent } from '@/lib/mockData';
-import { FileText, CheckCircle, XCircle, Clock, Plus, TrendingUp, Users, DollarSign, Calendar, MessageSquare, Timer, CreditCard, AlertCircle } from 'lucide-react';
+import { FileText, CheckCircle, XCircle, Clock, Plus, TrendingUp, Users, DollarSign, Calendar, MessageSquare, Timer, CreditCard, AlertCircle, FileCheck } from 'lucide-react';
 import DatePicker from '@/components/ui/date-picker';
 
 const FundRequests = () => {
@@ -24,6 +24,20 @@ const FundRequests = () => {
   const [paymentDate, setPaymentDate] = useState<Date | undefined>(undefined);
   const [declineReason, setDeclineReason] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  const [hasAcknowledgedTerms, setHasAcknowledgedTerms] = useState(false);
+  const [showTermsDialog, setShowTermsDialog] = useState(false);
+
+  // Check if terms have been acknowledged
+  useEffect(() => {
+    const acknowledged = localStorage.getItem('cbms-terms-acknowledged');
+    setHasAcknowledgedTerms(acknowledged === 'true');
+  }, []);
+
+  const handleTermsAcknowledgment = () => {
+    localStorage.setItem('cbms-terms-acknowledged', 'true');
+    setHasAcknowledgedTerms(true);
+    setShowTermsDialog(false);
+  };
 
   if (isLoading) {
     return (
@@ -37,6 +51,11 @@ const FundRequests = () => {
 
   const handleSubmitRequest = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!hasAcknowledgedTerms) {
+      setShowTermsDialog(true);
+      return;
+    }
     
     if (!amount || !reason) {
       console.log("Error: Please fill in all fields");
@@ -722,6 +741,70 @@ const FundRequests = () => {
                   Decline Request
                 </>
               )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Terms of Use Dialog */}
+      <Dialog open={showTermsDialog} onOpenChange={setShowTermsDialog}>
+        <DialogContent className="w-[95vw] max-w-[95vw] sm:w-auto sm:max-w-2xl mx-2 sm:mx-4 h-[90vh] sm:h-auto max-h-[90vh] sm:max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-indigo-500 text-white">
+                <FileCheck className="h-5 w-5" />
+              </div>
+              Terms of Use Required
+            </DialogTitle>
+            <DialogDescription>
+              You must acknowledge the Terms of Use before submitting fund requests
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h4 className="font-semibold text-amber-900 dark:text-amber-100 mb-2">
+                    Terms of Use Required
+                  </h4>
+                  <p className="text-amber-800 dark:text-amber-200 text-sm">
+                    Before you can submit fund requests to the CBMS Marriage Fund, you must read and acknowledge our Terms of Use. 
+                    This ensures you understand the rules, responsibilities, and procedures of the fund.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+              <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                Key Points from Terms of Use:
+              </h4>
+              <ul className="text-sm text-slate-700 dark:text-slate-300 space-y-1">
+                <li>• Each member contributes ₹5,000 per marriage</li>
+                <li>• 45-day advance notice required for marriage</li>
+                <li>• Payment due one week before marriage</li>
+                <li>• Fund disbursement on marriage day or day before</li>
+                <li>• One-month grace period for late payments</li>
+                <li>• All transactions must be recorded and verified</li>
+              </ul>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowTermsDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleTermsAcknowledgment}
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white"
+            >
+              <FileCheck className="h-4 w-4 mr-2" />
+              I Acknowledge & Accept Terms
             </Button>
           </DialogFooter>
         </DialogContent>
