@@ -163,33 +163,33 @@ const ManageUsers = () => {
               Add User
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-3xl">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-blue-500 text-white">
-                  <Users className="h-5 w-5" />
+          <DialogContent className="w-[95vw] max-w-[95vw] sm:w-auto sm:max-w-[500px] mx-2 sm:mx-4 h-[90vh] sm:h-auto max-h-[90vh] sm:max-h-[80vh] overflow-y-auto">
+            <DialogHeader className="pb-3 sm:pb-6">
+              <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-blue-500 text-white">
+                  <Users className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
                 {editingUser ? 'Edit User' : 'Create New User'}
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-sm sm:text-base">
                 {editingUser ? 'Update user information and settings' : 'Add a new user to the system with appropriate role and permissions'}
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-6">
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-6">
               {/* Profile Photo Section */}
-              <div className="flex flex-col items-center gap-4 py-4">
+              <div className="flex flex-col items-center gap-2 sm:gap-4 py-2 sm:py-4">
                 <div className="relative">
-                  <Avatar className="h-24 w-24">
+                  <Avatar className="h-16 w-16 sm:h-24 sm:w-24">
                     <AvatarImage src={formData.profile_photo} alt="Profile" />
-                    <AvatarFallback className="text-2xl">
+                    <AvatarFallback className="text-lg sm:text-2xl">
                       {formData.name.charAt(0).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <label
                     htmlFor="photo-upload"
-                    className="absolute -bottom-2 -right-2 p-2 bg-blue-500 text-white rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
+                    className="absolute -bottom-1 -right-1 sm:-bottom-2 sm:-right-2 p-1.5 sm:p-2 bg-blue-500 text-white rounded-full cursor-pointer hover:bg-blue-600 transition-colors"
                   >
-                    <Camera className="h-4 w-4" />
+                    <Camera className="h-3 w-3 sm:h-4 sm:w-4" />
                     <input
                       id="photo-upload"
                       type="file"
@@ -199,19 +199,19 @@ const ManageUsers = () => {
                     />
                   </label>
                 </div>
-                <p className="text-sm text-muted-foreground text-center">
+                <p className="text-xs sm:text-sm text-muted-foreground text-center px-2">
                   Click the camera icon to upload a profile photo
                 </p>
               </div>
 
-              <div className="grid gap-6 md:grid-cols-2">
+              <div className="grid gap-3 sm:gap-6 grid-cols-1 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="username" className="text-sm font-medium text-slate-700 dark:text-slate-300">Username</Label>
                   <Input
                     id="username"
                     value={formData.username}
                     onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                    className="h-12 border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-blue-500"
+                    className="h-9 sm:h-12 border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-blue-500"
                     placeholder="Enter username"
                     required
                   />
@@ -222,7 +222,7 @@ const ManageUsers = () => {
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="h-12 border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-blue-500"
+                    className="h-9 sm:h-12 border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-blue-500"
                     placeholder="Enter full name"
                     required
                   />
@@ -234,7 +234,7 @@ const ManageUsers = () => {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="h-12 border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-blue-500"
+                    className="h-9 sm:h-12 border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-blue-500"
                     placeholder="Enter email address"
                   />
                 </div>
@@ -245,7 +245,7 @@ const ManageUsers = () => {
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="h-12 border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-blue-500"
+                    className="h-9 sm:h-12 border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-blue-500"
                     placeholder="Enter phone number"
                   />
                 </div>
@@ -275,10 +275,10 @@ const ManageUsers = () => {
                   </Select>
                 </div>
                 {formData.role === 'member' && (
-                  <div className="space-y-2 md:col-span-2">
+                  <div className="space-y-2 sm:col-span-2">
                     <Label htmlFor="responsible" className="text-sm font-medium text-slate-700 dark:text-slate-300">Responsible Member</Label>
                     <Select value={formData.responsible_member_id} onValueChange={(value) => setFormData({ ...formData, responsible_member_id: value })}>
-                      <SelectTrigger className="h-12 border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-blue-500">
+                      <SelectTrigger className="h-9 sm:h-12 border-slate-300 dark:border-slate-600 focus:border-blue-500 focus:ring-blue-500">
                         <SelectValue placeholder="Select responsible member" />
                       </SelectTrigger>
                       <SelectContent>
@@ -292,18 +292,18 @@ const ManageUsers = () => {
                   </div>
                 )}
               </div>
-              <div className="flex justify-end gap-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+              <div className="flex flex-col sm:flex-row justify-end gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-slate-200 dark:border-slate-700">
                 <Button 
                   type="button" 
                   variant="outline" 
                   onClick={() => setIsDialogOpen(false)}
-                  className="px-6 py-2"
+                  className="w-full sm:w-auto px-3 sm:px-6 py-2 sm:py-2 text-sm sm:text-base"
                 >
                   Cancel
                 </Button>
                 <Button 
                   type="submit"
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2"
+                  className="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-3 sm:px-6 py-2 sm:py-2 text-sm sm:text-base"
                 >
                   {editingUser ? 'Update User' : 'Create User'}
                 </Button>
