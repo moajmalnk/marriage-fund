@@ -7,15 +7,21 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { mockUsers } from '@/lib/mockData';
 import { Plus, Edit, Trash2, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { UserRole, MaritalStatus } from '@/types';
+import { useToast } from '@/hooks/use-toast';
 
 const ManageUsers = () => {
   const { currentUser, isLoading } = useAuth();
+  const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<string | null>(null);
+  const [users, setUsers] = useState(mockUsers);
   
   const [formData, setFormData] = useState({
     username: '',
@@ -56,7 +62,7 @@ const ManageUsers = () => {
   };
 
   const handleEdit = (userId: string) => {
-    const user = mockUsers.find(u => u.id === userId);
+    const user = users.find(u => u.id === userId);
     if (user) {
       setFormData({
         username: user.username,
@@ -71,9 +77,26 @@ const ManageUsers = () => {
     }
   };
 
-  const handleDelete = (userId: string) => {
-    const user = mockUsers.find(u => u.id === userId);
-    console.log(`User Deleted: ${user?.name} has been removed`);
+  const handleDeleteClick = (userId: string) => {
+    setUserToDelete(userId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (!userToDelete) return;
+    
+    const user = users.find(u => u.id === userToDelete);
+    if (user) {
+      setUsers(prevUsers => prevUsers.filter(u => u.id !== userToDelete));
+      toast({
+        title: "User Deleted",
+        description: `${user.name} has been successfully removed from the system.`,
+        variant: "default",
+      });
+    }
+    
+    setDeleteDialogOpen(false);
+    setUserToDelete(null);
   };
 
   const resetForm = () => {
@@ -88,7 +111,8 @@ const ManageUsers = () => {
     setEditingUser(null);
   };
 
-  const responsibleMembers = mockUsers.filter(u => u.role === 'responsible_member');
+  const responsibleMembers = users.filter(u => u.role === 'responsible_member');
+  const userToDeleteData = users.find(u => u.id === userToDelete);
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -223,7 +247,7 @@ const ManageUsers = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockUsers.map(user => (
+                {users.map(user => (
                   <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell>{user.username}</TableCell>
@@ -246,7 +270,7 @@ const ManageUsers = () => {
                         <Button size="sm" variant="outline" onClick={() => handleEdit(user.id)}>
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => handleDelete(user.id)}>
+                        <Button size="sm" variant="outline" onClick={() => handleDeleteClick(user.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -258,6 +282,28 @@ const ManageUsers = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete User</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{userToDeleteData?.name}</strong>? 
+              This action cannot be undone and will permanently remove the user from the system.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete User
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
