@@ -3,34 +3,88 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CBMS Trust Flow</title>
-    <meta name="description" content="Community-Based Management System for fund tracking" />
-    <meta name="author" content="CBMS" />
-    <meta name="theme-color" content="#4A90E2" />
+    <title>CBMS Marriage Fund - Community Support System</title>
+    <meta name="description" content="A modern, secure community-based marriage fund management system. Track contributions, manage fund requests, and support community members with an elegant, user-friendly platform." />
+    <meta name="keywords" content="marriage fund, community support, fund management, CBMS, financial assistance, community-based system" />
+    <meta name="author" content="CBMS Community" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="color-scheme" content="light dark" />
     
-    <!-- PWA Meta Tags -->
+    <!-- Enhanced PWA Meta Tags -->
     <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="192x192" href="/icon-192.png" />
+    <link rel="apple-touch-icon" sizes="512x512" href="/icon-512.png" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="CBMS" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="CBMS Marriage Fund" />
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-tap-highlight" content="no" />
     
     <!-- Privacy & Security -->
-    <meta name="referrer" content="no-referrer" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
 
-    <meta property="og:title" content="CBMS Trust Flow" />
-    <meta property="og:description" content="Community-Based Management System for fund tracking" />
+    <!-- Enhanced Open Graph -->
+    <meta property="og:title" content="CBMS Marriage Fund - Community Support System" />
+    <meta property="og:description" content="A modern, secure community-based marriage fund management system. Track contributions, manage fund requests, and support community members." />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta property="og:url" content="https://cbms-marriage-fund.com" />
+    <meta property="og:image" content="/icon-512.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:site_name" content="CBMS Marriage Fund" />
+    <meta property="og:locale" content="en_US" />
 
+    <!-- Enhanced Twitter Card -->
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@lovable_dev" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <meta name="twitter:site" content="@cbms_fund" />
+    <meta name="twitter:creator" content="@cbms_fund" />
+    <meta name="twitter:title" content="CBMS Marriage Fund - Community Support System" />
+    <meta name="twitter:description" content="A modern, secure community-based marriage fund management system." />
+    <meta name="twitter:image" content="/icon-512.png" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "CBMS Marriage Fund",
+      "description": "A modern, secure community-based marriage fund management system",
+      "url": "https://cbms-marriage-fund.com",
+      "applicationCategory": "FinanceApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "INR"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "CBMS Community"
+      }
+    }
+    </script>
+
+    <!-- Preconnect to external domains for performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   </head>
 
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Fallback to check if React app loaded
+      setTimeout(() => {
+        if (!document.querySelector('#root').hasChildNodes()) {
+          console.error('React app failed to load');
+        }
+      }, 1000);
+    </script>
   </body>
 </html>

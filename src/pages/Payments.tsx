@@ -7,15 +7,21 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { mockUsers, mockPayments } from '@/lib/mockData';
-import { useToast } from '@/hooks/use-toast';
 import { Plus, History } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 const Payments = () => {
-  const { currentUser } = useAuth();
-  const { toast } = useToast();
+  const { currentUser, isLoading } = useAuth();
   const [selectedMember, setSelectedMember] = useState('');
   const [amount, setAmount] = useState('');
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   if (!currentUser) return null;
 
@@ -35,18 +41,11 @@ const Payments = () => {
     e.preventDefault();
     
     if (!selectedMember || !amount) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
+      console.log("Error: Please fill in all fields");
       return;
     }
 
-    toast({
-      title: "Payment Recorded",
-      description: `Payment of ₹${amount} recorded successfully`,
-    });
+    console.log(`Payment Recorded: Payment of ₹${amount} recorded successfully`);
 
     // Reset form
     setSelectedMember('');

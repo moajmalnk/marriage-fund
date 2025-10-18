@@ -1,14 +1,29 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
 Allow: /
+
+# Sitemap
+Sitemap: https://cbms-marriage-fund.com/sitemap.xml
+
+# Crawl delay
+Crawl-delay: 1
+
+# Disallow admin areas (if any)
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_internal/
+
+# Allow specific paths
+Allow: /dashboard
+Allow: /payments
+Allow: /team
+Allow: /fund-requests
+Allow: /profile
+
+# Block specific file types
+Disallow: *.json
+Disallow: *.xml
+Disallow: *.txt
+Disallow: /sw.js
+Disallow: /workbox-*.js
+Disallow: /sw.js.map
+Disallow: /workbox-*.js.map

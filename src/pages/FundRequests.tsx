@@ -8,14 +8,20 @@ import { Textarea } from '@/components/ui/textarea';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { mockFundRequests } from '@/lib/mockData';
-import { useToast } from '@/hooks/use-toast';
 import { FileText, CheckCircle, XCircle, Clock } from 'lucide-react';
 
 const FundRequests = () => {
-  const { currentUser } = useAuth();
-  const { toast } = useToast();
+  const { currentUser, isLoading } = useAuth();
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   if (!currentUser) return null;
 
@@ -23,18 +29,11 @@ const FundRequests = () => {
     e.preventDefault();
     
     if (!amount || !reason) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive",
-      });
+      console.log("Error: Please fill in all fields");
       return;
     }
 
-    toast({
-      title: "Request Submitted",
-      description: "Your fund request has been submitted for review",
-    });
+    console.log("Request Submitted: Your fund request has been submitted for review");
 
     setAmount('');
     setReason('');

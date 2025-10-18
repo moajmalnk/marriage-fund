@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
 import { Lock } from 'lucide-react';
 
 const Login = () => {
@@ -13,28 +12,20 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const { login } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     if (login(username, password)) {
-      toast({
-        title: "Login Successful",
-        description: "Welcome to CBMS Fund Management",
-      });
+      console.log("Login Successful - Welcome to CBMS Fund Management");
       navigate('/dashboard');
     } else {
-      toast({
-        title: "Login Failed",
-        description: "Invalid username or password",
-        variant: "destructive",
-      });
+      console.log("Login Failed - Invalid username or password");
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10 p-4">
+    <div className="h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10 p-4 overflow-hidden">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-2 text-center">
           <div className="mx-auto w-16 h-16 bg-primary rounded-full flex items-center justify-center mb-4">

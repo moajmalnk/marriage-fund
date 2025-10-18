@@ -6,8 +6,16 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 
 const Team = () => {
-  const { currentUser } = useAuth();
+  const { currentUser, isLoading } = useAuth();
   
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
   if (!currentUser) return null;
 
   const teams = getTeamStructure();
