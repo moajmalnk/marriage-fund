@@ -4,6 +4,7 @@ import { Navigate, Link, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { 
   LayoutDashboard, 
   CreditCard, 
@@ -16,6 +17,7 @@ import {
   Settings,
   Sparkles,
   Shield,
+  FileCheck,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { cn } from '@/lib/utils';
@@ -30,6 +32,8 @@ const Layout = ({ children }: LayoutProps) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
+  const [showTermsDialog, setShowTermsDialog] = useState(false);
+  const [hasAcknowledgedTerms, setHasAcknowledgedTerms] = useState(false);
 
   // Handle responsive behavior
   useEffect(() => {
@@ -42,6 +46,12 @@ const Layout = ({ children }: LayoutProps) => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Check if terms have been acknowledged
+  useEffect(() => {
+    const acknowledged = localStorage.getItem('cbms-terms-acknowledged');
+    setHasAcknowledgedTerms(acknowledged === 'true');
+  }, []);
+
   const handleLogoutClick = () => {
     setShowLogoutDialog(true);
   };
@@ -49,6 +59,12 @@ const Layout = ({ children }: LayoutProps) => {
   const handleLogoutConfirm = () => {
     logout();
     setShowLogoutDialog(false);
+  };
+
+  const handleTermsAcknowledgment = () => {
+    localStorage.setItem('cbms-terms-acknowledged', 'true');
+    setHasAcknowledgedTerms(true);
+    setShowTermsDialog(false);
   };
 
   // Show loading state while checking authentication
@@ -73,6 +89,7 @@ const Layout = ({ children }: LayoutProps) => {
     { name: 'Team', href: '/team', icon: Users, color: 'text-purple-600' },
     { name: 'Fund Requests', href: '/fund-requests', icon: Heart, color: 'text-red-600' },
     { name: 'Manage Users', href: '/manage-users', icon: Settings, color: 'text-orange-600' },
+    { name: 'Terms of Use', href: '#', icon: FileCheck, color: 'text-indigo-600', isAction: true },
   ];
 
   const navigation = currentUser.role === 'admin' ? adminNavigation : [
@@ -80,6 +97,7 @@ const Layout = ({ children }: LayoutProps) => {
     { name: 'Payments', href: '/payments', icon: CreditCard, color: 'text-green-600' },
     { name: 'Team', href: '/team', icon: Users, color: 'text-purple-600' },
     { name: 'Fund Requests', href: '/fund-requests', icon: Heart, color: 'text-red-600' },
+    { name: 'Terms of Use', href: '#', icon: FileCheck, color: 'text-indigo-600', isAction: true },
   ];
 
   const SidebarContent = () => (
@@ -117,39 +135,58 @@ const Layout = ({ children }: LayoutProps) => {
               className="animate-slide-up"
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <Link
-                to={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={cn(
-                  "group relative flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all duration-300 ease-out",
-                  "hover:scale-[1.02] active:scale-[0.98]",
-                  isActive
-                    ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-xl shadow-blue-500/25 border border-blue-400/20"
-                    : "bg-white/60 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-slate-700/80 border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-sm"
-                )}
-              >
-                <div className={cn(
-                  "p-1.5 rounded-xl transition-all duration-300",
-                  isActive 
-                    ? "bg-white/20" 
-                    : "bg-slate-100/80 dark:bg-slate-700/80 group-hover:bg-slate-200/80 dark:group-hover:bg-slate-600/80"
-                )}>
-                  <item.icon className={cn(
-                    "h-4 w-4 transition-all duration-300",
-                    isActive ? "text-white" : item.color
-                  )} />
-                </div>
-                <span className="font-medium">{item.name}</span>
-                {isActive && (
-                  <div className="ml-auto flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                    <Sparkles className="h-3 w-3 text-white/80" />
+              {item.isAction ? (
+                <button
+                  onClick={() => {
+                    setShowTermsDialog(true);
+                    setMobileMenuOpen(false);
+                  }}
+                  className={cn(
+                    "group relative flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all duration-300 ease-out w-full text-left",
+                    "hover:scale-[1.02] active:scale-[0.98]",
+                    "bg-white/60 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-slate-700/80 border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-sm"
+                  )}
+                >
+                  <div className="p-1.5 rounded-xl transition-all duration-300 bg-slate-100/80 dark:bg-slate-700/80 group-hover:bg-slate-200/80 dark:group-hover:bg-slate-600/80">
+                    <item.icon className="h-4 w-4 transition-all duration-300 text-indigo-600" />
                   </div>
-                )}
-                {isActive && (
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/10 to-indigo-600/10 animate-pulse" />
-                )}
-              </Link>
+                  <span className="font-medium">{item.name}</span>
+                </button>
+              ) : (
+                <Link
+                  to={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={cn(
+                    "group relative flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all duration-300 ease-out",
+                    "hover:scale-[1.02] active:scale-[0.98]",
+                    isActive
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-xl shadow-blue-500/25 border border-blue-400/20"
+                      : "bg-white/60 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-slate-700/80 border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-sm"
+                  )}
+                >
+                  <div className={cn(
+                    "p-1.5 rounded-xl transition-all duration-300",
+                    isActive 
+                      ? "bg-white/20" 
+                      : "bg-slate-100/80 dark:bg-slate-700/80 group-hover:bg-slate-200/80 dark:group-hover:bg-slate-600/80"
+                  )}>
+                    <item.icon className={cn(
+                      "h-4 w-4 transition-all duration-300",
+                      isActive ? "text-white" : item.color
+                    )} />
+                  </div>
+                  <span className="font-medium">{item.name}</span>
+                  {isActive && (
+                    <div className="ml-auto flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                      <Sparkles className="h-3 w-3 text-white/80" />
+                    </div>
+                  )}
+                  {isActive && (
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/10 to-indigo-600/10 animate-pulse" />
+                  )}
+                </Link>
+              )}
             </div>
           );
         })}
@@ -290,6 +327,190 @@ const Layout = ({ children }: LayoutProps) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Terms of Use Dialog */}
+      <Dialog open={showTermsDialog} onOpenChange={setShowTermsDialog}>
+        <DialogContent className="w-[95vw] max-w-[95vw] sm:w-auto sm:max-w-4xl mx-2 sm:mx-4 h-[90vh] sm:h-auto max-h-[90vh] sm:max-h-[80vh] overflow-y-auto">
+          <DialogHeader className="pb-4">
+            <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
+              <div className="p-2 rounded-lg bg-indigo-500 text-white">
+                <FileCheck className="h-5 w-5" />
+              </div>
+              CBMS വിവാഹക്കുറി നിയമാവലി (Marriage Fund Regulations)
+            </DialogTitle>
+            <DialogDescription className="text-sm sm:text-base">
+              Marriage Fund Terms and Conditions - Please read and acknowledge
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-6 text-sm sm:text-base leading-relaxed">
+            <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">ആമുഖം (Purpose & Scope)</h3>
+              <p className="text-blue-800 dark:text-blue-200">
+                CBMS അംഗങ്ങളുടെ വിവാഹച്ചെലവുകൾക്ക് സാമ്പത്തിക പിന്തുണ നൽകുന്നതിനായി ഈ "വിവാഹക്കുറി" രൂപീകരിച്ചിരിക്കുന്നു.
+                ഈ കുറിയിൽ അംഗങ്ങളാകുന്ന എല്ലാവരും താഴെപ്പറയുന്ന നിയമങ്ങളും വ്യവസ്ഥകളും കർശനമായി പാലിക്കേണ്ടതാണ്.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">1. അംഗത്വം (Membership Eligibility)</h4>
+                <p className="text-slate-700 dark:text-slate-300">
+                  ഈ കുറിയിൽ അംഗമാകാൻ CBMS യിലെ സ്ഥിരാംഗങ്ങൾക്കു മാത്രമേ അർഹതയുള്ളൂ. പുതിയ അംഗങ്ങളെ ഉൾപ്പെടുത്തൽ, ഒഴിവാക്കൽ, അല്ലെങ്കിൽ അംഗത്വ കാലാവധി സംബന്ധിച്ച കാര്യങ്ങൾ CBMS അംഗീകൃത അധികാരികൾ തീരുമാനിക്കും.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">2. പണസമാഹരണവും (Fund Contribution)</h4>
+                <p className="text-slate-700 dark:text-slate-300">
+                  ഓരോ അംഗവും മറ്റൊരു അംഗത്തിന്റെ വിവാഹാവസരത്തിൽ ₹5000 (അയ്യായിരം രൂപ) വീതം അടയ്ക്കേണ്ടതാണ്. പണം കൃത്യമായി സമയത്ത് അടയ്ക്കേണ്ടത് ഓരോ അംഗത്തിന്റെയും വ്യക്തിപരമായ ഉത്തരവാദിത്വമാണ്.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">3. വിവാഹ അറിയിപ്പ് (Marriage Notification)</h4>
+                <p className="text-slate-700 dark:text-slate-300">
+                  കുറിയിൽ അംഗമായിട്ടുള്ളവർ, തങ്ങളുടെ വിവാഹം നിശ്ചയിച്ചാൽ കുറഞ്ഞത് 45 ദിവസ മുമ്പ് കുറിയുടെ ഉത്തരവാദികളോട് വിവരം അറിയിക്കണം. ഉത്തരവാദിത്വമുള്ളവർ എല്ലാ അംഗങ്ങളെയും വിവാഹത്തിന് 30 ദിവസങ്ങൾക്ക് മുമ്പ് പണമടക്കാനുള്ള ഔദ്യോഗിക അറിയിപ്പ് നൽകേണ്ടതാണ്.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">4. പണം അടയ്ക്കൽ സമയക്രമം (Payment Schedule)</h4>
+                <p className="text-slate-700 dark:text-slate-300">
+                  എല്ലാ അംഗങ്ങളും വിവാഹത്തിന് ഒരാഴ്ച മുമ്പ് തന്നെ പണം ഉത്തരവാദികളായ വ്യക്തികൾക്ക് കൈമാറിക്കഴിഞ്ഞിരിക്കണം. പണം കൈപ്പറ്റിയവരും (വിവാഹിതരും) തങ്ങളുടെ കടമയായി നിശ്ചിത തുക പിന്നീട് അടയ്ക്കേണ്ടതാണ്.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">5. പണം കൈമാറ്റം (Disbursement of Fund)</h4>
+                <p className="text-slate-700 dark:text-slate-300">
+                  പിരിച്ചെടുത്ത തുക വിവാഹത്തിൻ്റെ മുൻദിവസമോ വിവാഹദിനത്തെയോ ആയിരിക്കും ബന്ധപ്പെട്ട അംഗത്തിന് കൈമാറുക. അത്യാവശ്യ സാഹചര്യങ്ങളിൽ (ഉദാഹരണം: അടിയന്തര ചെലവ്) പണം ആവശ്യമായാൽ, അതിനു കുറഞ്ഞത് രണ്ട് മാസം മുമ്പ് ഉത്തരവാദിത്വമുള്ളവരെ വിവരം അറിയിക്കണം.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">6. കുറിയുടെ നിലനിൽപ്പ് (Duration of the Fund)</h4>
+                <p className="text-slate-700 dark:text-slate-300">
+                  ഈ കുറി അതിലെ എല്ലാ അംഗങ്ങളുടെയും വിവാഹങ്ങൾ കഴിഞ്ഞാൽ സ്വാഭാവികമായി അവസാനിക്കുന്നതാണ്. ഒരു വ്യക്തി അംഗത്വം ആരംഭിച്ചതിനുശേഷം പിൻമാറാൻ പാടില്ല.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">7. വൈകിയ പണമടവ് (Delayed Payment Clause)</h4>
+                <p className="text-slate-700 dark:text-slate-300">
+                  നിശ്ചിത സമയത്ത് പണമടക്കാൻ സാധിക്കാത്തവർക്ക് (മുഴുവനായോ ഭാഗികമായോ) ആ തുക അവരുടെ പേരിൽ കടമായി രേഖപ്പെടുത്തും. അവശേഷിക്കുന്ന തുക ഒരു മാസത്തിനകം തീർപ്പാക്കേണ്ടതാണ്.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">8. പ്രത്യേക സാഹചര്യങ്ങൾ (Special Cases)</h4>
+                <p className="text-slate-700 dark:text-slate-300">
+                  ഒരു അംഗത്തിന്റെ വിവാഹം മാറ്റിയാൽ അല്ലെങ്കിൽ റദ്ദായാൽ, മുൻപ് അടച്ച തുക അടുത്ത വിവാഹാവസരത്തിൽ നിലനിൽക്കും. പണം അടക്കാത്തവർക്ക്, ഗ്രൂപ്പിൻ്റെ തീരുമാനപ്രകാരം ആവശ്യമായ നടപടികൾ / നിയമനടപടി സ്വീകരിക്കാം.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">9. ഫണ്ട് നിയന്ത്രണം & സുതാര്യത (Fund Management & Transparency)</h4>
+                <p className="text-slate-700 dark:text-slate-300">
+                  പിരിച്ചെടുക്കുന്ന തുകയും കൈമാറുന്ന തുകയും രേഖപ്പെടുത്താൻ റജിസ്റ്റർ / Google Sheet / അക്കൗണ്ട് ബുക്ക് നിർബന്ധമായും ഉപയോഗിക്കണം. പണം കൈകാര്യം ചെയ്യുക കുറഞ്ഞത് രണ്ട് ഉത്തരവാദികളായ വ്യക്തികളാണ് ചെയ്യേണ്ടത്. എല്ലാ ഇടപാടുകൾക്കും രസീത് / ഡിജിറ്റൽ രേഖ നൽകേണ്ടതാണ്.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">10. അഭിപ്രായങ്ങളും നിർദ്ദേശങ്ങളും (Suggestions & Feedback)</h4>
+                <p className="text-slate-700 dark:text-slate-300">
+                  കുറിയുമായി ബന്ധപ്പെട്ട ഏതു വിധത്തിലുള്ള അഭിപ്രായങ്ങളോ നിർദ്ദേശങ്ങളോ ഉത്തരവാദികളിൽ ആരോടും നേരിട്ട് പങ്കുവെക്കാവുന്നതാണ്.
+                </p>
+              </div>
+
+              <div>
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">11. അവസാന ഘട്ടം (Closure & Remaining Funds)</h4>
+                <p className="text-slate-700 dark:text-slate-300">
+                  എല്ലാ അംഗങ്ങളുടെയും വിവാഹം കഴിഞ്ഞാൽ കുറി അവസാനിക്കും. അവസാന ഘട്ടത്തിൽ ബാക്കിയുള്ള തുക ഉണ്ടെങ്കിൽ അത് പൊതുയോഗത്തിൽ എടുത്ത തീരുമാനം അനുസരിച്ച് വിനിയോഗിക്കാവുന്നതാണ്.
+                </p>
+              </div>
+
+              <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-3">12. അംഗീകാരം (Acknowledgement & Signatures)</h4>
+                <p className="text-slate-700 dark:text-slate-300 mb-4">
+                  ഈ നിയമാവലി പൂർണ്ണമായി വായിച്ചറിഞ്ഞ്, ഇതിലെ എല്ലാ വ്യവസ്ഥകളും അംഗീകരിച്ചുകൊണ്ട് താഴെപ്പറയുന്നവർ ഒപ്പുവെക്കുന്നു.
+                </p>
+                
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div>
+                    <h5 className="font-medium text-slate-900 dark:text-slate-100 mb-2">ഉത്തരവാദിത്വമുള്ളവർ (Responsible Members):</h5>
+                    <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
+                      <li>• Muhammed Fawas KK</li>
+                      <li>• Muhammed Basil VP</li>
+                      <li>• Muhammed Mubasheer M</li>
+                      <li>• Muhammed Shakir KK</li>
+                      <li>• Muhammed Ajmal NK</li>
+                      <li>• Mohammed Nawas MK</li>
+                      <li>• Mohammed Sabeeh CK</li>
+                      <li>• Muhammed Ameen TP</li>
+                    </ul>
+                  </div>
+                  
+                  <div>
+                    <h5 className="font-medium text-slate-900 dark:text-slate-100 mb-2">അംഗങ്ങൾ (Members):</h5>
+                    <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
+                      <li>• Muhammed Fawas KK</li>
+                      <li>• Muhammed Basil VP</li>
+                      <li>• Muhammed Mubasheer M</li>
+                      <li>• Muhammed Shakir KK</li>
+                      <li>• Muhammed Adhil A</li>
+                      <li>• Mohammed Ajmal P</li>
+                      <li>• Mohammed Ajmal NK</li>
+                      <li>• Mohammed Nawas MK</li>
+                      <li>• Mohammed Sabeeh CK</li>
+                      <li>• Muhammed Ameen TP</li>
+                      <li>• Muhammed Shareef</li>
+                      <li>• Muhammed Ashif PP</li>
+                      <li>• Ali Akbar</li>
+                      <li>• Muhammed Isham</li>
+                      <li>• Junaid PM</li>
+                      <li>• Muhsin</li>
+                      <li>• Muzammil</li>
+                      <li>• Salman</li>
+                      <li>• Shaheer</li>
+                      <li>• Shakir Jamal</li>
+                      <li>• Adhil KP</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                    Approved by: CBMS (Community-Based Mutual Support)
+                  </p>
+                  <p className="text-sm text-slate-600 dark:text-slate-400">
+                    Date: ____________________ | Place: ____________________
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="pt-4 border-t border-slate-200 dark:border-slate-700">
+            <Button
+              variant="outline"
+              onClick={() => setShowTermsDialog(false)}
+              className="px-4 sm:px-6 py-2"
+            >
+              Close
+            </Button>
+            {!hasAcknowledgedTerms && (
+              <Button
+                onClick={handleTermsAcknowledgment}
+                className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-4 sm:px-6 py-2"
+              >
+                <FileCheck className="h-4 w-4 mr-2" />
+                I Acknowledge & Accept
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
