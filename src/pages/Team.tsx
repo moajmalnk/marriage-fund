@@ -1,7 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getTeamStructure, getUserTotalContributed, hasUserPaidThisMonth, mockUsers, getTotalCollected, getTotalSpent } from '@/lib/mockData';
-import { User, CheckCircle, XCircle, Award, Users, Wallet, TrendingUp, Calendar, Plus, MessageSquare, CreditCard, DollarSign, Heart, FileCheck, AlertCircle } from 'lucide-react';
+import { User, CheckCircle, XCircle, Award, Users, Wallet, TrendingUp, Calendar, Plus, MessageSquare, CreditCard, DollarSign, Heart, FileCheck, AlertCircle, Trophy, Medal, Crown } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -72,6 +72,40 @@ const Team = () => {
 
   // Get team structure with responsible members and their team members
   const teams = getTeamStructure();
+
+  // Calculate team rankings based on total paid amounts
+  const teamsWithRanking = teams.map((team) => {
+    const leaderTotalPaid = getUserTotalContributed(team.responsible_member.id);
+    const teamMembersTotalPaid = team.members.reduce((sum, member) => sum + getUserTotalContributed(member.id), 0);
+    const teamTotalPaid = leaderTotalPaid + teamMembersTotalPaid;
+    const teamTotalTarget = (team.members.length + 1) * 120000; // Leader + all members
+    const teamTotalToCollect = teamTotalTarget - teamTotalPaid;
+    const teamProgress = (teamTotalPaid / teamTotalTarget) * 100;
+
+    return {
+      ...team,
+      leaderTotalPaid,
+      teamMembersTotalPaid,
+      teamTotalPaid,
+      teamTotalTarget,
+      teamTotalToCollect,
+      teamProgress
+    };
+  }).sort((a, b) => b.teamTotalPaid - a.teamTotalPaid); // Sort by total paid amount (descending)
+
+  // Helper function to get rank icon and styling
+  const getRankIcon = (rank: number) => {
+    switch (rank) {
+      case 1:
+        return { icon: Crown, color: 'text-yellow-500', bgColor: 'bg-yellow-100 dark:bg-yellow-900/30', borderColor: 'border-yellow-300 dark:border-yellow-700' };
+      case 2:
+        return { icon: Trophy, color: 'text-gray-400', bgColor: 'bg-gray-100 dark:bg-gray-800/50', borderColor: 'border-gray-300 dark:border-gray-600' };
+      case 3:
+        return { icon: Medal, color: 'text-amber-600', bgColor: 'bg-amber-100 dark:bg-amber-900/30', borderColor: 'border-amber-300 dark:border-amber-700' };
+      default:
+        return { icon: Award, color: 'text-blue-500', bgColor: 'bg-blue-100 dark:bg-blue-900/30', borderColor: 'border-blue-300 dark:border-blue-700' };
+    }
+  };
 
   // Check if user can request funds or deposit to wallet
   const canRequestFunds = currentUser.role === 'member' || currentUser.role === 'responsible_member';
@@ -322,52 +356,74 @@ const Team = () => {
         </CardContent>
       </Card>
 
-      {/* Leader-Based Members */}
+      {/* Team Rankings Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Trophy className="h-5 w-5 text-yellow-500" />
+            Team Rankings by Total Paid Amount
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Teams are ranked based on their total contribution amounts. Higher contributions lead to better rankings.
+          </p>
+        </CardHeader>
+      </Card>
+
+      {/* Leader-Based Members - Ranked by Total Paid */}
       <div className="space-y-6">
-        {teams.map((team) => {
-          const leaderTotalPaid = getUserTotalContributed(team.responsible_member.id);
+        {teamsWithRanking.map((team, index) => {
+          const rank = index + 1;
+          const rankInfo = getRankIcon(rank);
+          const RankIcon = rankInfo.icon;
           const leaderMarriageAmount = 120000;
-          const leaderToCollect = leaderMarriageAmount - leaderTotalPaid;
-          
-          // Calculate team totals
-          const teamMembersTotalPaid = team.members.reduce((sum, member) => sum + getUserTotalContributed(member.id), 0);
-          const teamTotalPaid = leaderTotalPaid + teamMembersTotalPaid;
-          const teamTotalTarget = (team.members.length + 1) * 120000; // Leader + all members
-          const teamTotalToCollect = teamTotalTarget - teamTotalPaid;
+          const leaderToCollect = leaderMarriageAmount - team.leaderTotalPaid;
 
           return (
             <Card key={team.responsible_member.id}>
               <CardHeader>
                 {/* Team Totals - First */}
-                <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg p-4 mb-4 border border-blue-200 dark:border-blue-700">
-                  <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Team Totals ({team.members.length + 1} members)
-                  </h4>
+                <div className={`bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg p-4 mb-4 border border-blue-200 dark:border-blue-700 relative ${rankInfo.borderColor}`}>
+                  {/* Rank Badge */}
+                  <div className={`absolute -top-2 -right-2 ${rankInfo.bgColor} ${rankInfo.borderColor} border-2 rounded-full p-2 shadow-lg`}>
+                    <RankIcon className={`h-5 w-5 ${rankInfo.color}`} />
+                  </div>
+                  
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                      <Users className="h-4 w-4" />
+                      Team Totals ({team.members.length + 1} members)
+                    </h4>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-slate-600 dark:text-slate-400">Rank</span>
+                      <Badge variant="outline" className={`${rankInfo.color} ${rankInfo.borderColor} border`}>
+                        #{rank}
+                      </Badge>
+                    </div>
+                  </div>
                   <div className="grid grid-cols-4 gap-4 mb-4">
                     <div className="text-center">
                       <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Total Target</p>
                       <p className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                        ₹{teamTotalTarget.toLocaleString('en-IN')}
+                        ₹{team.teamTotalTarget.toLocaleString('en-IN')}
                       </p>
                     </div>
                     <div className="text-center">
                       <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">To Collect</p>
                       <p className="text-lg font-bold text-orange-600 dark:text-orange-400">
-                        ₹{teamTotalToCollect.toLocaleString('en-IN')}
+                        ₹{team.teamTotalToCollect.toLocaleString('en-IN')}
                       </p>
                     </div>
                     <div className="text-center">
                       <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Total Paid</p>
                       <p className="text-lg font-bold text-green-600 dark:text-green-400">
-                        ₹{teamTotalPaid.toLocaleString('en-IN')}
+                        ₹{team.teamTotalPaid.toLocaleString('en-IN')}
                       </p>
                     </div>
                     
                     <div className="text-center">
                       <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Progress</p>
                       <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                        {((teamTotalPaid / teamTotalTarget) * 100).toFixed(1)}%
+                        {team.teamProgress.toFixed(1)}%
                       </p>
                     </div>
                   </div>
@@ -376,12 +432,12 @@ const Team = () => {
                   <div className="mt-3">
                     <div className="flex justify-between text-xs text-slate-600 dark:text-slate-400 mb-1">
                       <span>Team Progress</span>
-                      <span>{((teamTotalPaid / teamTotalTarget) * 100).toFixed(1)}%</span>
+                      <span>{team.teamProgress.toFixed(1)}%</span>
                     </div>
                     <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-3">
                       <div 
                         className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full transition-all duration-300"
-                        style={{ width: `${Math.min((teamTotalPaid / teamTotalTarget) * 100, 100)}%` }}
+                        style={{ width: `${Math.min(team.teamProgress, 100)}%` }}
                       ></div>
                     </div>
                   </div>
@@ -401,7 +457,7 @@ const Team = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-xl font-bold text-green-600 dark:text-green-400">
-                        ₹{leaderTotalPaid.toLocaleString('en-IN')}
+                        ₹{team.leaderTotalPaid.toLocaleString('en-IN')}
                       </p>
                       <p className="text-xs text-slate-500 dark:text-slate-400">Paid</p>
                     </div>
@@ -423,7 +479,7 @@ const Team = () => {
                     <div>
                       <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">Progress</p>
                       <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                        {((leaderTotalPaid / leaderMarriageAmount) * 100).toFixed(1)}%
+                        {((team.leaderTotalPaid / leaderMarriageAmount) * 100).toFixed(1)}%
                       </p>
                     </div>
                   </div>
@@ -431,12 +487,12 @@ const Team = () => {
                   <div className="mt-3">
                     <div className="flex justify-between text-xs text-slate-600 dark:text-slate-400 mb-1">
                       <span>Progress</span>
-                      <span>{((leaderTotalPaid / leaderMarriageAmount) * 100).toFixed(1)}%</span>
+                      <span>{((team.leaderTotalPaid / leaderMarriageAmount) * 100).toFixed(1)}%</span>
                     </div>
                     <div className="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2">
                       <div 
                         className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${Math.min((leaderTotalPaid / leaderMarriageAmount) * 100, 100)}%` }}
+                        style={{ width: `${Math.min((team.leaderTotalPaid / leaderMarriageAmount) * 100, 100)}%` }}
                       ></div>
                     </div>
                   </div>
