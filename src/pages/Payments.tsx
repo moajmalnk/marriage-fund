@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,6 +40,13 @@ const Payments = () => {
   }
 
   if (!currentUser) return null;
+
+  // Ensure responsible members can only collect payments
+  useEffect(() => {
+    if (currentUser.role === 'responsible_member' && paymentType === 'pay') {
+      setPaymentType('collect');
+    }
+  }, [currentUser.role, paymentType]);
 
   // Get members based on user role
   const getAvailableMembers = () => {
@@ -329,7 +336,7 @@ const Payments = () => {
             <CardDescription className="text-blue-700 dark:text-blue-300">
               {currentUser.role === 'admin' 
                 ? 'Record collections from members or disbursements to approved members' 
-                : 'Record collections from your assigned members or disbursements to approved members'}
+                : 'Record collections from your assigned members'}
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-0">
@@ -351,63 +358,82 @@ const Payments = () => {
             )}
 
             <form onSubmit={handleRecordPayment} className="space-y-6">
-              {/* Payment Type Selection */}
-              <div className="space-y-3">
-                <Label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
-                  <DollarSign className="h-4 w-4" />
-                  Payment Type
-                </Label>
-                <div className="flex gap-4">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      id="collect"
-                      name="paymentType"
-                      value="collect"
-                      checked={paymentType === 'collect'}
-                      onChange={(e) => {
-                        setPaymentType(e.target.value as 'collect' | 'pay');
-                        if (errors.paymentType) {
-                          setErrors(prev => ({ ...prev, paymentType: '' }));
-                        }
-                      }}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                    />
-                    <Label htmlFor="collect" className="flex items-center gap-2 cursor-pointer">
-                      <ArrowDownCircle className="h-4 w-4 text-green-600" />
-                      <span className="text-sm font-medium">Collect</span>
-                      <span className="text-xs text-slate-500">(Receive payment from member)</span>
-                    </Label>
+              {/* Payment Type Selection - Only show for admins */}
+              {currentUser.role === 'admin' && (
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                    <DollarSign className="h-4 w-4" />
+                    Payment Type
+                  </Label>
+                  <div className="flex gap-4">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        id="collect"
+                        name="paymentType"
+                        value="collect"
+                        checked={paymentType === 'collect'}
+                        onChange={(e) => {
+                          setPaymentType(e.target.value as 'collect' | 'pay');
+                          if (errors.paymentType) {
+                            setErrors(prev => ({ ...prev, paymentType: '' }));
+                          }
+                        }}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                      />
+                      <Label htmlFor="collect" className="flex items-center gap-2 cursor-pointer">
+                        <ArrowDownCircle className="h-4 w-4 text-green-600" />
+                        <span className="text-sm font-medium">Collect</span>
+                        <span className="text-xs text-slate-500">(Receive payment from member)</span>
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="radio"
+                        id="pay"
+                        name="paymentType"
+                        value="pay"
+                        checked={paymentType === 'pay'}
+                        onChange={(e) => {
+                          setPaymentType(e.target.value as 'collect' | 'pay');
+                          if (errors.paymentType) {
+                            setErrors(prev => ({ ...prev, paymentType: '' }));
+                          }
+                        }}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                      />
+                      <Label htmlFor="pay" className="flex items-center gap-2 cursor-pointer">
+                        <ArrowUpCircle className="h-4 w-4 text-red-600" />
+                        <span className="text-sm font-medium">Pay</span>
+                        <span className="text-xs text-slate-500">(Disburse fund to member)</span>
+                      </Label>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="radio"
-                      id="pay"
-                      name="paymentType"
-                      value="pay"
-                      checked={paymentType === 'pay'}
-                      onChange={(e) => {
-                        setPaymentType(e.target.value as 'collect' | 'pay');
-                        if (errors.paymentType) {
-                          setErrors(prev => ({ ...prev, paymentType: '' }));
-                        }
-                      }}
-                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                    />
-                    <Label htmlFor="pay" className="flex items-center gap-2 cursor-pointer">
-                      <ArrowUpCircle className="h-4 w-4 text-red-600" />
-                      <span className="text-sm font-medium">Pay</span>
-                      <span className="text-xs text-slate-500">(Disburse fund to member)</span>
-                    </Label>
+                  {errors.paymentType && (
+                    <div className="flex items-center gap-2 text-red-600 dark:text-red-400 text-sm">
+                      <AlertCircle className="h-4 w-4" />
+                      {errors.paymentType}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Payment Type Display for Non-Admins */}
+              {currentUser.role !== 'admin' && (
+                <div className="space-y-3">
+                  <Label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                    <DollarSign className="h-4 w-4" />
+                    Payment Type
+                  </Label>
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800">
+                    <ArrowDownCircle className="h-5 w-5 text-green-600" />
+                    <div>
+                      <span className="text-sm font-medium text-green-800 dark:text-green-200">Collect Payment</span>
+                      <p className="text-xs text-green-600 dark:text-green-400">Receive payment from member</p>
+                    </div>
                   </div>
                 </div>
-                {errors.paymentType && (
-                  <div className="flex items-center gap-2 text-red-600 dark:text-red-400 text-sm">
-                    <AlertCircle className="h-4 w-4" />
-                    {errors.paymentType}
-                  </div>
-                )}
-              </div>
+              )}
 
               {/* Member Selection */}
               <div className="space-y-2">
@@ -543,16 +569,28 @@ const Payments = () => {
                   {isSubmitting ? (
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Recording {paymentType === 'collect' ? 'Collection' : 'Payment'}...
+                      {currentUser.role === 'admin' 
+                        ? `Recording ${paymentType === 'collect' ? 'Collection' : 'Payment'}...`
+                        : 'Recording Collection...'
+                      }
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      {paymentType === 'collect' ? (
-                        <ArrowDownCircle className="h-4 w-4" />
+                      {currentUser.role === 'admin' ? (
+                        <>
+                          {paymentType === 'collect' ? (
+                            <ArrowDownCircle className="h-4 w-4" />
+                          ) : (
+                            <ArrowUpCircle className="h-4 w-4" />
+                          )}
+                          Record {paymentType === 'collect' ? 'Collection' : 'Payment'}
+                        </>
                       ) : (
-                        <ArrowUpCircle className="h-4 w-4" />
+                        <>
+                          <ArrowDownCircle className="h-4 w-4" />
+                          Record Collection
+                        </>
                       )}
-                      Record {paymentType === 'collect' ? 'Collection' : 'Payment'}
                     </div>
                   )}
                 </Button>

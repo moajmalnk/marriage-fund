@@ -1,7 +1,7 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { getTeamStructure, getUserTotalContributed, hasUserPaidThisMonth, mockUsers, getTotalCollected, getTotalSpent } from '@/lib/mockData';
-import { User, CheckCircle, XCircle, Award, Users, Wallet, TrendingUp, Calendar, Plus, MessageSquare, CreditCard, DollarSign, Heart, FileCheck, AlertCircle, Trophy, Medal, Crown, Sparkles, Target, Zap, Star, ArrowUpRight, Eye, BarChart3 } from 'lucide-react';
+import { User, CheckCircle, XCircle, Award, Users, Wallet, TrendingUp, Calendar, Plus, MessageSquare, CreditCard, DollarSign, Heart, FileCheck, AlertCircle, Trophy, Medal, Crown, Sparkles, Target, Zap, Star, ArrowUpRight, Eye, BarChart3, UserPlus, UserMinus, Settings, Shield, ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -309,6 +309,20 @@ const Team = () => {
   const [isSubmittingFundRequest, setIsSubmittingFundRequest] = useState(false);
   const [hasAcknowledgedTerms, setHasAcknowledgedTerms] = useState(false);
   const [showTermsDialog, setShowTermsDialog] = useState(false);
+  
+  // Team Management States
+  const [showTeamManagementModal, setShowTeamManagementModal] = useState(false);
+  const [teamManagementMode, setTeamManagementMode] = useState<'add_member' | 'assign_member' | 'remove_member'>('add_member');
+  const [teamManagementFormData, setTeamManagementFormData] = useState({
+    memberName: '',
+    username: '',
+    maritalStatus: 'Unmarried',
+    assignedAmount: '',
+    responsibleMemberId: '',
+    selectedMemberId: ''
+  });
+  const [isSubmittingTeamManagement, setIsSubmittingTeamManagement] = useState(false);
+  const [teamManagementErrors, setTeamManagementErrors] = useState<{[key: string]: string}>({});
 
   // Check if terms have been acknowledged
   useEffect(() => {
@@ -484,13 +498,108 @@ const Team = () => {
     }
   };
 
+  // Team Management Handlers
+  const handleTeamManagementInputChange = (field: string, value: string) => {
+    setTeamManagementFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+    // Clear error when user starts typing
+    if (teamManagementErrors[field]) {
+      setTeamManagementErrors(prev => ({
+        ...prev,
+        [field]: ''
+      }));
+    }
+  };
+
+  const validateTeamManagementForm = () => {
+    const newErrors: {[key: string]: string} = {};
+    
+    if (teamManagementMode === 'add_member') {
+      if (!teamManagementFormData.memberName) {
+        newErrors.memberName = 'Please enter member name';
+      }
+      if (!teamManagementFormData.username) {
+        newErrors.username = 'Please enter username';
+      }
+      if (!teamManagementFormData.assignedAmount) {
+        newErrors.assignedAmount = 'Please enter assigned amount';
+      } else if (parseFloat(teamManagementFormData.assignedAmount) <= 0) {
+        newErrors.assignedAmount = 'Amount must be greater than 0';
+      }
+      if (!teamManagementFormData.responsibleMemberId) {
+        newErrors.responsibleMemberId = 'Please select responsible member';
+      }
+    } else if (teamManagementMode === 'assign_member') {
+      if (!teamManagementFormData.selectedMemberId) {
+        newErrors.selectedMemberId = 'Please select a member';
+      }
+      if (!teamManagementFormData.responsibleMemberId) {
+        newErrors.responsibleMemberId = 'Please select responsible member';
+      }
+    } else if (teamManagementMode === 'remove_member') {
+      if (!teamManagementFormData.selectedMemberId) {
+        newErrors.selectedMemberId = 'Please select a member to remove';
+      }
+    }
+    
+    setTeamManagementErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleTeamManagementSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateTeamManagementForm()) {
+      return;
+    }
+
+    setIsSubmittingTeamManagement(true);
+
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      console.log('Team management action submitted:', {
+        mode: teamManagementMode,
+        data: teamManagementFormData,
+        user: currentUser.name
+      });
+
+      // Reset form and close modal
+      setTeamManagementFormData({
+        memberName: '',
+        username: '',
+        maritalStatus: 'Unmarried',
+        assignedAmount: '',
+        responsibleMemberId: '',
+        selectedMemberId: ''
+      });
+      setTeamManagementErrors({});
+      setShowTeamManagementModal(false);
+      
+      console.log('Team management action completed successfully!');
+    } catch (error) {
+      console.error('Error submitting team management action:', error);
+    } finally {
+      setIsSubmittingTeamManagement(false);
+    }
+  };
+
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900">
-      {/* Fund Statistics Cards */}
-      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
+    <div className="space-y-4 sm:space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Team Management</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">View team performance and manage team members</p>
+        </div>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
           {canRequestFunds && (
             <Dialog open={showFundRequestModal} onOpenChange={setShowFundRequestModal}>
               <DialogTrigger asChild>
@@ -523,134 +632,97 @@ const Team = () => {
           )}
       </div>
 
-        <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        <Card className="group relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-200 dark:border-blue-800 h-full">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-indigo-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
-          <CardContent className="relative p-6 h-full flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 group-hover:scale-110 transition-transform duration-300">
-                <Users className="h-6 w-6 text-slate-600 dark:text-slate-300" />
+      {/* Team Statistics Cards */}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
+        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-200 dark:border-blue-800">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-blue-500 text-white flex-shrink-0">
+                <Users className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-blue-600 dark:text-blue-400">Total Members</p>
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-900 dark:text-blue-100">{fundStats.totalUsers}</p>
               </div>
-            <div className="space-y-1 flex-1">
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                {fundStats.totalUsers}
-              </h3>
-              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                Total Members
-              </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="group relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border-emerald-200 dark:border-emerald-800 h-full">
-          <div className="absolute inset-0 bg-gradient-to-br from-emerald-500 to-teal-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
-          <CardContent className="relative p-6 h-full flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 group-hover:scale-110 transition-transform duration-300">
-                <Target className="h-6 w-6 text-slate-600 dark:text-slate-300" />
+        <Card className="bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/30 border-emerald-200 dark:border-emerald-800">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-emerald-500 text-white flex-shrink-0">
+                <Target className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-emerald-600 dark:text-emerald-400">Total Marriage Fund</p>
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-emerald-900 dark:text-emerald-100">₹{fundStats.totalMarriageAmount.toLocaleString('en-IN')}</p>
+                <p className="text-xs text-emerald-500 dark:text-emerald-400">₹120,000 per user</p>
               </div>
-            <div className="space-y-1 flex-1">
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                ₹{fundStats.totalMarriageAmount.toLocaleString('en-IN')}
-              </h3>
-              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                Total Marriage Fund
-              </p>
-              <p className="text-xs text-slate-500 dark:text-slate-500">
-                ₹120,000 per user
-              </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="group relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/30 dark:to-violet-950/30 border-purple-200 dark:border-purple-800 h-full">
-          <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-violet-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
-          <CardContent className="relative p-6 h-full flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 group-hover:scale-110 transition-transform duration-300">
-                <Wallet className="h-6 w-6 text-slate-600 dark:text-slate-300" />
+        <Card className="bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/30 dark:to-violet-950/30 border-purple-200 dark:border-purple-800">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-purple-500 text-white flex-shrink-0">
+                <Wallet className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-purple-600 dark:text-purple-400">Total Paid</p>
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-900 dark:text-purple-100">₹{fundStats.totalPaidAmount.toLocaleString('en-IN')}</p>
               </div>
-            <div className="space-y-1 flex-1">
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                ₹{fundStats.totalPaidAmount.toLocaleString('en-IN')}
-              </h3>
-              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                Total Paid
-              </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="group relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl bg-gradient-to-br from-red-50 to-pink-50 dark:from-red-950/30 dark:to-pink-950/30 border-red-200 dark:border-red-800 h-full">
-          <div className="absolute inset-0 bg-gradient-to-br from-red-500 to-pink-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
-          <CardContent className="relative p-6 h-full flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 group-hover:scale-110 transition-transform duration-300">
-                <CreditCard className="h-6 w-6 text-slate-600 dark:text-slate-300" />
+        <Card className="bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950/30 dark:to-rose-950/30 border-red-200 dark:border-red-800">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-red-500 text-white flex-shrink-0">
+                <CreditCard className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-red-600 dark:text-red-400">Spend Amount</p>
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-red-900 dark:text-red-100">₹{fundStats.spendAmount.toLocaleString('en-IN')}</p>
+                <p className="text-xs text-red-500 dark:text-red-400">Approved requests</p>
               </div>
-            <div className="space-y-1 flex-1">
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                ₹{fundStats.spendAmount.toLocaleString('en-IN')}
-              </h3>
-              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                Spend Amount
-              </p>
-              <p className="text-xs text-slate-500 dark:text-slate-500">
-                Approved requests
-              </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="group relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-cyan-950/30 dark:to-blue-950/30 border-cyan-200 dark:border-cyan-800 h-full">
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 to-blue-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
-          <CardContent className="relative p-6 h-full flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 group-hover:scale-110 transition-transform duration-300">
-                <DollarSign className="h-6 w-6 text-slate-600 dark:text-slate-300" />
+        <Card className="bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-cyan-950/30 dark:to-blue-950/30 border-cyan-200 dark:border-cyan-800">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-cyan-500 text-white flex-shrink-0">
+                <DollarSign className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-cyan-600 dark:text-cyan-400">Balance Amount</p>
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-cyan-900 dark:text-cyan-100">₹{fundStats.balanceAmount.toLocaleString('en-IN')}</p>
+                <p className="text-xs text-cyan-500 dark:text-cyan-400">Available funds</p>
               </div>
-            <div className="space-y-1 flex-1">
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                ₹{fundStats.balanceAmount.toLocaleString('en-IN')}
-              </h3>
-              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                Balance Amount
-              </p>
-              <p className="text-xs text-slate-500 dark:text-slate-500">
-                Available funds
-              </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="group relative overflow-hidden transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950/30 dark:to-red-950/30 border-orange-200 dark:border-orange-800 h-full">
-          <div className="absolute inset-0 bg-gradient-to-br from-orange-500 to-red-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
-          <CardContent className="relative p-6 h-full flex flex-col">
-            <div className="flex items-center justify-between mb-4">
-              <div className="p-3 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700 group-hover:scale-110 transition-transform duration-300">
-                <Calendar className="h-6 w-6 text-slate-600 dark:text-slate-300" />
+        <Card className="bg-gradient-to-br from-orange-50 to-red-50 dark:from-orange-950/30 dark:to-orange-950/30 border-orange-200 dark:border-orange-800">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-orange-500 text-white flex-shrink-0">
+                <Calendar className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-orange-600 dark:text-orange-400">To Collect</p>
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-orange-900 dark:text-orange-100">₹{fundStats.toCollectAmount.toLocaleString('en-IN')}</p>
               </div>
-            <div className="space-y-1 flex-1">
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
-                ₹{fundStats.toCollectAmount.toLocaleString('en-IN')}
-              </h3>
-              <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                To Collect
-              </p>
             </div>
           </CardContent>
         </Card>
       </div>
-      </section>
 
       {/* Enhanced Progress Section */}
-      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-white/80 to-slate-50/80 dark:from-slate-900/80 dark:to-slate-800/80 backdrop-blur-sm shadow-2xl">
           <div className="absolute inset-0 bg-gradient-to-br from-blue-600/5 via-indigo-600/5 to-purple-600/5" />
           <CardHeader className="relative">
@@ -714,11 +786,8 @@ const Team = () => {
                 </div>
           </CardContent>
         </Card>
-      </section>
-  
       {/* Team Cards Section */}
-      <section className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-16">
-        <div className="space-y-8">
+      <div className="space-y-8">
           {teamsWithRanking.map((team, index) => {
             const rank = index + 1;
             const rankInfo = getRankIcon(rank);
@@ -733,7 +802,7 @@ const Team = () => {
                       rank === 2 ? 'bg-gradient-to-r from-gray-500 to-gray-600' :
                       'bg-gradient-to-r from-amber-500 to-amber-600'
                     }`}>
-                      {rank === 1 ? '🥇 CHAMPION' : rank === 2 ? '🥈 RUNNER-UP' : '🥉 THIRD PLACE'}
+                      {rank === 1 ? `🥇 CHAMPION ${team.responsible_member.name} Team` : rank === 2 ? `🥈 RUNNER-UP ${team.responsible_member.name}` : `🥉 THIRD PLACE ${team.responsible_member.name}`}
                               </div>
                               </div>
                 )}
@@ -745,8 +814,7 @@ const Team = () => {
                       </div>
                     );
                   })}
-                  </div>
-      </section>
+      </div>
 
       {/* Fund Request Dialog */}
       <Dialog open={showFundRequestModal} onOpenChange={setShowFundRequestModal}>

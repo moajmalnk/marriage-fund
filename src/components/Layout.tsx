@@ -147,7 +147,7 @@ const Layout = ({ children }: LayoutProps) => {
     setShowTermsDialog(false);
   };
 
-  // Voice reading function
+  // Voice reading function with professional lady English voice
   const handleVoiceReading = (language: 'en') => {
     if (isReading) {
       window.speechSynthesis.cancel();
@@ -164,63 +164,163 @@ const Layout = ({ children }: LayoutProps) => {
     
     const utterance = new SpeechSynthesisUtterance(textContent);
     
-    // Set professional voice settings
+    // Enhanced professional voice settings for lady English voice
     utterance.lang = 'en-US';
-    utterance.rate = 0.85; // Slightly slower for professional delivery
-    utterance.pitch = 0.9; // Slightly lower pitch for professional tone
+    utterance.rate = 0.75; // Slower for clear, professional delivery
+    utterance.pitch = 0.85; // Lower pitch for professional lady voice
     utterance.volume = 1.0; // Full volume
     
-    // Try to select a professional female voice
-    const selectProfessionalVoice = () => {
+    // Enhanced professional female voice selection with priority order
+    const selectProfessionalLadyVoice = () => {
       const voices = window.speechSynthesis.getVoices();
-      const professionalVoice = voices.find(voice => 
-        voice.lang.startsWith('en') && 
-        (voice.name.includes('Female') || 
-         voice.name.includes('Susan') || 
-         voice.name.includes('Karen') || 
-         voice.name.includes('Samantha') ||
-         voice.name.includes('Victoria') ||
-         voice.name.includes('Alex') ||
-         voice.name.includes('Enhanced') ||
-         voice.name.includes('Premium') ||
-         voice.name.includes('Microsoft') ||
-         voice.name.includes('Google'))
-      );
       
-      if (professionalVoice) {
-        utterance.voice = professionalVoice;
+      // Priority list for professional lady English voices
+      const professionalLadyVoices = [
+        // Premium/Enhanced voices (highest priority)
+        'Microsoft Zira Desktop - English (United States)',
+        'Microsoft Hazel Desktop - English (Great Britain)',
+        'Google UK English Female',
+        'Google US English Female',
+        'Samantha',
+        'Victoria',
+        'Susan',
+        'Karen',
+        'Alex',
+        'Fiona',
+        'Moira',
+        'Tessa',
+        'Veena',
+        'Rishi',
+        'Amélie',
+        'Anna',
+        'Carmit',
+        'Damayanti',
+        'Ellen',
+        'Ioana',
+        'Joana',
+        'Kanya',
+        'Laura',
+        'Lekha',
+        'Luciana',
+        'Mariska',
+        'Melina',
+        'Milena',
+        'Monica',
+        'Nora',
+        'Paulina',
+        'Sara',
+        'Satu',
+        'Sin-ji',
+        'Ting-Ting',
+        'Trinoids',
+        'Vicki',
+        'Xander',
+        'Yelda',
+        'Yuna',
+        'Yuri',
+        'Zosia',
+        'Zuzana'
+      ];
+      
+      // Find the best professional lady voice
+      let selectedVoice = null;
+      
+      // First, try to find exact matches from priority list
+      for (const voiceName of professionalLadyVoices) {
+        selectedVoice = voices.find(voice => 
+          voice.name === voiceName && 
+          voice.lang.startsWith('en')
+        );
+        if (selectedVoice) break;
+      }
+      
+      // If no exact match, try partial matches for professional lady voices
+      if (!selectedVoice) {
+        selectedVoice = voices.find(voice => 
+          voice.lang.startsWith('en') && 
+          (voice.name.toLowerCase().includes('female') || 
+           voice.name.toLowerCase().includes('lady') ||
+           voice.name.toLowerCase().includes('woman') ||
+           voice.name.toLowerCase().includes('samantha') ||
+           voice.name.toLowerCase().includes('victoria') ||
+           voice.name.toLowerCase().includes('susan') ||
+           voice.name.toLowerCase().includes('karen') ||
+           voice.name.toLowerCase().includes('alex') ||
+           voice.name.toLowerCase().includes('fiona') ||
+           voice.name.toLowerCase().includes('moira') ||
+           voice.name.toLowerCase().includes('tessa') ||
+           voice.name.toLowerCase().includes('veena') ||
+           voice.name.toLowerCase().includes('microsoft') ||
+           voice.name.toLowerCase().includes('google') ||
+           voice.name.toLowerCase().includes('enhanced') ||
+           voice.name.toLowerCase().includes('premium') ||
+           voice.name.toLowerCase().includes('desktop'))
+        );
+      }
+      
+      // If still no match, try any English female voice
+      if (!selectedVoice) {
+        selectedVoice = voices.find(voice => 
+          voice.lang.startsWith('en') && 
+          voice.name.toLowerCase().includes('female')
+        );
+      }
+      
+      // Final fallback: any English voice
+      if (!selectedVoice) {
+        selectedVoice = voices.find(voice => voice.lang.startsWith('en'));
+      }
+      
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+        console.log('Selected professional lady voice:', selectedVoice.name);
+      } else {
+        console.log('No professional lady voice found, using default');
       }
     };
     
     // Try to select voice immediately
-    selectProfessionalVoice();
+    selectProfessionalLadyVoice();
     
     // If voices aren't loaded yet, wait for them
     if (window.speechSynthesis.getVoices().length === 0) {
-      window.speechSynthesis.addEventListener('voiceschanged', selectProfessionalVoice, { once: true });
+      window.speechSynthesis.addEventListener('voiceschanged', selectProfessionalLadyVoice, { once: true });
     }
     
-    utterance.onstart = () => setIsReading(true);
-    utterance.onend = () => setIsReading(false);
-    utterance.onerror = () => setIsReading(false);
+    // Enhanced event handlers
+    utterance.onstart = () => {
+      setIsReading(true);
+      console.log('Professional lady voice reading started');
+    };
     
+    utterance.onend = () => {
+      setIsReading(false);
+      console.log('Professional lady voice reading completed');
+    };
+    
+    utterance.onerror = (event) => {
+      setIsReading(false);
+      console.error('Voice reading error:', event.error);
+    };
+    
+    // Cancel any existing speech and start new reading
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
   };
 
 
-  // Get English content for voice reading
+  // Get English content for professional lady voice reading
   const getEnglishContent = () => {
     const englishContent = `
       CBMS Marriage Fund Regulations
       
-      Purpose and Scope: This Marriage Fund has been formed to provide financial support to CBMS members for their wedding expenses. All members participating in this fund must strictly adhere to the following rules and regulations.
+      Purpose and Scope: This Marriage Fund has been established to provide financial support to CBMS members for their wedding expenses. All members participating in this fund must strictly adhere to the following rules and regulations.
       
       Section 1 - Membership Eligibility: Only permanent members of CBMS are eligible to join this fund. Matters related to inclusion of new members, exclusion, or membership duration shall be decided by CBMS authorized authorities.
       
-      Section 2 - Fund Contribution: Each member must contribute 5000 Rupees on the occasion of another member's wedding. It is each member's personal responsibility to pay the amount on time.
+      Section 2 - Fund Contribution: Each member must contribute five thousand rupees on the occasion of another member's wedding. It is each member's personal responsibility to pay the amount on time.
       
-      Section 3 - Marriage Notification: Members must inform the fund coordinators at least 45 days in advance when their wedding is finalized. The coordinators shall issue official notification to all members 30 days before the wedding for payment collection.
+      Section 3 - Marriage Notification: Members must inform the fund coordinators at least forty-five days in advance when their wedding is finalized. The coordinators shall issue official notification to all members thirty days before the wedding for payment collection.
       
       Section 4 - Payment Schedule: All members must submit their contribution to the responsible persons at least one week before the wedding. Those who receive the fund are obligated to contribute the specified amount for subsequent weddings.
       
@@ -232,7 +332,7 @@ const Layout = ({ children }: LayoutProps) => {
       
       Section 8 - Special Cases: If a member's wedding is postponed or cancelled, the previously collected amount will remain valid for the next wedding occasion. For non-payment cases, necessary actions may be taken as per group decision.
       
-      Section 9 - Fund Management and Transparency: A Register or Google Sheet or Account Book must be used to record collected and disbursed amounts. Fund management shall be handled by at least two responsible persons. Receipts and Digital records must be provided for all transactions.
+      Section 9 - Fund Management and Transparency: A Register, Google Sheet, or Account Book must be used to record collected and disbursed amounts. Fund management shall be handled by at least two responsible persons. Receipts and digital records must be provided for all transactions.
       
       Section 10 - Suggestions and Feedback: Any opinions or suggestions related to the fund can be directly shared with any of the coordinators.
       
