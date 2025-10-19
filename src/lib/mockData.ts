@@ -242,10 +242,10 @@ export const mockNotifications: Notification[] = [
   {
     id: 'n3',
     title: 'Wedding Announcement',
-    message: 'Shareef\'s wedding is scheduled for March 5, 2025. Please prepare your contributions.',
+    message: 'Shakir Jamal\'s wedding is scheduled for November 23, 2025. Please prepare your contributions.',
     type: 'wedding',
     isRead: true,
-    created_at: '2025-01-23T09:00:00Z',
+    created_at: '2025-09-23T09:00:00Z',
     related_id: 'fr3',
     related_type: 'wedding',
     priority: 'high'

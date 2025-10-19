@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { getTotalFundBalance, getTotalCollected, getTotalDisbursed, getMaritalStatusCount, mockPayments, mockFundRequests, mockUsers, getTeamStructure, getUserTotalContributed } from '@/lib/mockData';
+import { getTotalFundBalance, getTotalCollected, getTotalDisbursed, getMaritalStatusCount, mockPayments, mockFundRequests, mockUsers, getTeamStructure, getUserTotalContributed, mockNotifications } from '@/lib/mockData';
 import { 
   IndianRupee, 
   TrendingUp, 
@@ -19,7 +19,9 @@ import {
   CheckCircle,
   Clock,
   XCircle,
-  Calendar
+  Calendar,
+  Gift,
+  PartyPopper
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -82,6 +84,12 @@ const Dashboard = () => {
     .filter(request => request.status === 'approved' || request.status === 'pending')
     .sort((a, b) => new Date(b.requested_date).getTime() - new Date(a.requested_date).getTime())
     .slice(0, 5); // Show latest 5 requests
+
+  // Get wedding announcements
+  const weddingAnnouncements = mockNotifications
+    .filter(notification => notification.type === 'wedding')
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 3); // Show latest 3 announcements
 
   // Rank icon helper
   const getRankIcon = (rank: number) => {
@@ -272,6 +280,96 @@ const Dashboard = () => {
           </CardContent>
         </Card>
       </div>
+            {/* Wedding Announcements */}
+            <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 border-slate-200 dark:border-slate-600">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
+            <div className="p-2 rounded-lg bg-gradient-to-br from-pink-500 to-rose-600 text-white">
+              <Heart className="h-5 w-5" />
+            </div>
+            Wedding Announcements
+          </CardTitle>
+          <CardDescription className="text-slate-700 dark:text-slate-300">
+            Latest wedding announcements and upcoming celebrations
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {weddingAnnouncements.length === 0 ? (
+              <div className="text-center py-8">
+                <div className="p-3 rounded-full bg-slate-100 dark:bg-slate-800 mx-auto mb-4 w-fit">
+                  <Heart className="h-6 w-6 text-slate-400" />
+                </div>
+                <p className="text-slate-500 dark:text-slate-400 font-medium">No wedding announcements yet</p>
+                <p className="text-sm text-slate-400 dark:text-slate-500">
+                  Wedding announcements will appear here when members share their special news
+                </p>
+              </div>
+            ) : (
+              weddingAnnouncements.map((announcement) => (
+                <div 
+                  key={announcement.id} 
+                  className="flex items-center justify-between p-4 rounded-xl transition-all duration-200 hover:shadow-md bg-gradient-to-r from-pink-50 to-rose-50 dark:from-pink-950/30 dark:to-rose-950/30 border border-pink-200 dark:border-pink-800"
+                >
+                  <div className="flex items-center gap-4 flex-1 min-w-0">
+                    <div className="flex-shrink-0 p-2 rounded-lg bg-white dark:bg-slate-800 shadow-sm">
+                      <Heart className="h-5 w-5 text-pink-600 dark:text-pink-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-1">
+                        <p className="font-semibold text-slate-900 dark:text-slate-100 text-sm sm:text-base">
+                          {announcement.title}
+                        </p>
+                        <Badge variant="outline" className="text-xs px-2 py-1 bg-pink-100 dark:bg-pink-900/30 text-pink-800 dark:text-pink-200 border-pink-300 dark:border-pink-700">
+                          Wedding
+                        </Badge>
+                      </div>
+                      <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400">
+                        {announcement.message}
+                      </p>
+                      <div className="flex items-center gap-4 mt-2">
+                        <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                          <Calendar className="h-3 w-3" />
+                          <span>Announced: {new Date(announcement.created_at).toLocaleDateString('en-IN')}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
+                          <Gift className="h-3 w-3" />
+                          <span>Contribution Required</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0 text-right ml-4">
+                    <div className="flex items-center gap-2">
+                      <PartyPopper className="h-5 w-5 text-pink-600 dark:text-pink-400" />
+                      <span className="text-xs font-medium text-pink-600 dark:text-pink-400">
+                        Celebration
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                      ₹5,000 per member
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          
+          {/* View All Announcements Button */}
+          <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-600">
+            <Button 
+              variant="outline" 
+              className="w-full h-10 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500"
+              asChild
+            >
+              <a href="/notifications">
+                <Heart className="h-4 w-4 mr-2" />
+                View All Announcements
+              </a>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Quick Actions */}
       <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 border-slate-200 dark:border-slate-600">
