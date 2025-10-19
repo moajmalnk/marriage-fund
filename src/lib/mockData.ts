@@ -46,15 +46,18 @@ export const mockUsers: User[] = [
 
 // Mock Payments
 export const mockPayments: Payment[] = [
-  { id: 'p1', user_id: '11', amount: 45000, date: '2025-01-15', time: '10:30 AM', recorded_by: '1', recorded_by_name: 'Ameen' },
-  { id: 'p2', user_id: '12', amount: 70000, date: '2025-01-16', time: '02:15 PM', recorded_by: '1', recorded_by_name: 'Ameen' },
-  { id: 'p3', user_id: '13', amount: 70000, date: '2025-01-14', time: '11:45 AM', recorded_by: '2', recorded_by_name: 'Sabeeh' },
-  { id: 'p4', user_id: '15', amount: 70000, date: '2025-01-17', time: '09:00 AM', recorded_by: '3', recorded_by_name: 'Ajmal NK' },
-  { id: 'p5', user_id: '17', amount: 70000, date: '2025-01-18', time: '03:30 PM', recorded_by: '4', recorded_by_name: 'Shakir KK' },
-  { id: 'p6', user_id: '19', amount: 70000, date: '2025-01-19', time: '01:20 PM', recorded_by: '5', recorded_by_name: 'Fawaz' },
-  { id: 'p7', user_id: '21', amount: 70000, date: '2025-01-20', time: '10:00 AM', recorded_by: '6', recorded_by_name: 'Basil' },
-  { id: 'p8', user_id: '23', amount: 70000, date: '2025-01-21', time: '04:45 PM', recorded_by: '7', recorded_by_name: 'Mubashir' },
-  { id: 'p9', user_id: '25', amount: 70000, date: '2025-01-22', time: '02:30 PM', recorded_by: '7', recorded_by_name: 'Salman' },
+  { id: 'p1', user_id: '11', amount: 45000, date: '2025-01-15', time: '10:30 AM', recorded_by: '1', recorded_by_name: 'Ameen', type: 'collect', notes: 'Monthly contribution' },
+  { id: 'p2', user_id: '12', amount: 70000, date: '2025-01-16', time: '02:15 PM', recorded_by: '1', recorded_by_name: 'Ameen', type: 'collect', notes: 'Monthly contribution' },
+  { id: 'p3', user_id: '13', amount: 70000, date: '2025-01-14', time: '11:45 AM', recorded_by: '2', recorded_by_name: 'Sabeeh', type: 'collect', notes: 'Monthly contribution' },
+  { id: 'p4', user_id: '15', amount: 70000, date: '2025-01-17', time: '09:00 AM', recorded_by: '3', recorded_by_name: 'Ajmal NK', type: 'collect', notes: 'Monthly contribution' },
+  { id: 'p5', user_id: '17', amount: 70000, date: '2025-01-18', time: '03:30 PM', recorded_by: '4', recorded_by_name: 'Shakir KK', type: 'collect', notes: 'Monthly contribution' },
+  { id: 'p6', user_id: '19', amount: 70000, date: '2025-01-19', time: '01:20 PM', recorded_by: '5', recorded_by_name: 'Fawaz', type: 'collect', notes: 'Monthly contribution' },
+  { id: 'p7', user_id: '21', amount: 70000, date: '2025-01-20', time: '10:00 AM', recorded_by: '6', recorded_by_name: 'Basil', type: 'collect', notes: 'Monthly contribution' },
+  { id: 'p8', user_id: '23', amount: 70000, date: '2025-01-21', time: '04:45 PM', recorded_by: '7', recorded_by_name: 'Mubashir', type: 'collect', notes: 'Monthly contribution' },
+  { id: 'p9', user_id: '25', amount: 70000, date: '2025-01-22', time: '02:30 PM', recorded_by: '7', recorded_by_name: 'Mubashir', type: 'collect', notes: 'Monthly contribution' },
+  // Sample disbursements
+  { id: 'p10', user_id: '11', amount: 120000, date: '2025-01-25', time: '11:00 AM', recorded_by: '99', recorded_by_name: 'Administrator', type: 'pay', notes: 'Marriage fund disbursement - approved request' },
+  { id: 'p11', user_id: '13', amount: 60000, date: '2025-01-26', time: '02:00 PM', recorded_by: '99', recorded_by_name: 'Administrator', type: 'pay', notes: 'Partial marriage fund disbursement' },
 ];
 
 // Mock Fund Requests

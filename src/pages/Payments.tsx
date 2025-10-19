@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import DatePicker from '@/components/ui/date-picker';
 import PaymentModal from '@/components/ui/payment-modal';
 import { mockUsers, mockPayments } from '@/lib/mockData';
-import { Plus, History, User, DollarSign, Calendar, FileText, CheckCircle2, AlertCircle, Edit, Trash2, MoreHorizontal, TrendingUp, Wallet, CreditCard, Users, Clock } from 'lucide-react';
+import { Plus, History, User, DollarSign, Calendar, FileText, CheckCircle2, AlertCircle, Edit, Trash2, MoreHorizontal, TrendingUp, Wallet, CreditCard, Users, Clock, ArrowDownCircle, ArrowUpCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 
@@ -20,6 +20,7 @@ const Payments = () => {
   const [amount, setAmount] = useState('');
   const [paymentDate, setPaymentDate] = useState('');
   const [notes, setNotes] = useState('');
+  const [paymentType, setPaymentType] = useState<'collect' | 'pay'>('collect');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [errors, setErrors] = useState<{[key: string]: string}>({});
@@ -76,7 +77,9 @@ const Payments = () => {
       const newPayment = {
         id: Date.now().toString(),
         ...paymentData,
-        recorded_by_name: currentUser.name
+        recorded_by_name: currentUser.name,
+        type: paymentType,
+        notes: notes
       };
       setPayments(prev => [newPayment, ...prev]);
       console.log('Payment created:', newPayment);
@@ -117,6 +120,10 @@ const Payments = () => {
       newErrors.date = 'Please select the payment date';
     }
     
+    if (!paymentType) {
+      newErrors.paymentType = 'Please select payment type';
+    }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -134,7 +141,22 @@ const Payments = () => {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 1500));
       
-      console.log(`Payment Recorded: Payment of ₹${amount} recorded successfully for ${selectedMember}`);
+      // Create new payment record
+      const newPayment = {
+        id: Date.now().toString(),
+        user_id: selectedMember,
+        amount: parseFloat(amount),
+        date: paymentDate,
+        time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }),
+        recorded_by: currentUser.id,
+        recorded_by_name: currentUser.name,
+        type: paymentType,
+        notes: notes
+      };
+      
+      setPayments(prev => [newPayment, ...prev]);
+      
+      console.log(`Payment Recorded: ${paymentType === 'collect' ? 'Collection' : 'Payment'} of ₹${amount} recorded successfully for ${selectedMember}`);
       
       // Show success message
       setShowSuccess(true);
@@ -144,6 +166,7 @@ const Payments = () => {
       setAmount('');
       setPaymentDate('');
       setNotes('');
+      setPaymentType('collect');
       setErrors({});
       
       // Hide success message after 3 seconds
@@ -169,6 +192,8 @@ const Payments = () => {
   // Calculate payment statistics
   const totalPayments = visiblePayments.length;
   const totalAmount = visiblePayments.reduce((sum, p) => sum + p.amount, 0);
+  const collectedAmount = visiblePayments.filter(p => p.type === 'collect').reduce((sum, p) => sum + p.amount, 0);
+  const paidAmount = visiblePayments.filter(p => p.type === 'pay').reduce((sum, p) => sum + p.amount, 0);
   const thisMonthPayments = visiblePayments.filter(p => {
     const paymentDate = new Date(p.date);
     const now = new Date();
@@ -212,11 +237,25 @@ const Payments = () => {
           <CardContent className="p-3 sm:p-4 lg:p-6">
             <div className="flex items-center gap-2 sm:gap-3">
               <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-green-500 text-white flex-shrink-0">
-                <DollarSign className="h-4 w-4 sm:h-5 sm:w-5" />
+                <ArrowDownCircle className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-green-600 dark:text-green-400">Total Amount</p>
-                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-green-900 dark:text-green-100">₹{totalAmount.toLocaleString('en-IN')}</p>
+                <p className="text-xs sm:text-sm font-medium text-green-600 dark:text-green-400">Collected Amount</p>
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-green-900 dark:text-green-100">₹{collectedAmount.toLocaleString('en-IN')}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950/30 dark:to-rose-950/30 border-red-200 dark:border-red-800">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-red-500 text-white flex-shrink-0">
+                <ArrowUpCircle className="h-4 w-4 sm:h-5 sm:w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-red-600 dark:text-red-400">Paid Amount</p>
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-red-900 dark:text-red-100">₹{paidAmount.toLocaleString('en-IN')}</p>
               </div>
             </div>
           </CardContent>
@@ -251,30 +290,25 @@ const Payments = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-br from-cyan-50 to-blue-50 dark:from-cyan-950/30 dark:to-blue-950/30 border-cyan-200 dark:border-cyan-800">
-          <CardContent className="p-3 sm:p-4 lg:p-6">
-            <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-cyan-500 text-white flex-shrink-0">
-                <Users className="h-4 w-4 sm:h-5 sm:w-5" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-cyan-600 dark:text-cyan-400">Active Members</p>
-                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-cyan-900 dark:text-cyan-100">{uniqueMembers}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 border-slate-200 dark:border-slate-600">
+
+        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-200 dark:border-blue-800">
           <CardContent className="p-3 sm:p-4 lg:p-6">
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-slate-500 text-white flex-shrink-0">
-                <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
+              <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-blue-500 text-white flex-shrink-0">
+                <Wallet className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs sm:text-sm font-medium text-slate-600 dark:text-slate-400">Last Payment</p>
-                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-slate-900 dark:text-slate-100">
-                  {visiblePayments.length > 0 ? new Date(visiblePayments[0].date).toLocaleDateString() : 'N/A'}
+                <p className="text-xs sm:text-sm font-medium text-blue-600 dark:text-blue-400">Net Balance</p>
+                <p className={`text-lg sm:text-xl lg:text-2xl font-bold ${
+                  (collectedAmount - paidAmount) >= 0 
+                    ? 'text-green-900 dark:text-green-100' 
+                    : 'text-red-900 dark:text-red-100'
+                }`}>
+                  ₹{(collectedAmount - paidAmount).toLocaleString('en-IN')}
+                </p>
+                <p className="text-xs text-blue-500 dark:text-blue-400">
+                  {collectedAmount >= paidAmount ? 'Surplus' : 'Deficit'}
                 </p>
               </div>
             </div>
@@ -294,8 +328,8 @@ const Payments = () => {
             </CardTitle>
             <CardDescription className="text-blue-700 dark:text-blue-300">
               {currentUser.role === 'admin' 
-                ? 'Record payment for any community member' 
-                : 'Record payment for your assigned members'}
+                ? 'Record collections from members or disbursements to approved members' 
+                : 'Record collections from your assigned members or disbursements to approved members'}
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-0">
@@ -306,10 +340,10 @@ const Payments = () => {
                   <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
                   <div>
                     <p className="text-sm font-medium text-green-800 dark:text-green-200">
-                      Payment recorded successfully!
+                      {paymentType === 'collect' ? 'Collection' : 'Payment'} recorded successfully!
                     </p>
                     <p className="text-xs text-green-600 dark:text-green-400">
-                      The payment has been added to the system records.
+                      The {paymentType === 'collect' ? 'collection' : 'payment'} has been added to the system records.
                     </p>
                   </div>
                 </div>
@@ -317,6 +351,64 @@ const Payments = () => {
             )}
 
             <form onSubmit={handleRecordPayment} className="space-y-6">
+              {/* Payment Type Selection */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                  <DollarSign className="h-4 w-4" />
+                  Payment Type
+                </Label>
+                <div className="flex gap-4">
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="collect"
+                      name="paymentType"
+                      value="collect"
+                      checked={paymentType === 'collect'}
+                      onChange={(e) => {
+                        setPaymentType(e.target.value as 'collect' | 'pay');
+                        if (errors.paymentType) {
+                          setErrors(prev => ({ ...prev, paymentType: '' }));
+                        }
+                      }}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    />
+                    <Label htmlFor="collect" className="flex items-center gap-2 cursor-pointer">
+                      <ArrowDownCircle className="h-4 w-4 text-green-600" />
+                      <span className="text-sm font-medium">Collect</span>
+                      <span className="text-xs text-slate-500">(Receive payment from member)</span>
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="radio"
+                      id="pay"
+                      name="paymentType"
+                      value="pay"
+                      checked={paymentType === 'pay'}
+                      onChange={(e) => {
+                        setPaymentType(e.target.value as 'collect' | 'pay');
+                        if (errors.paymentType) {
+                          setErrors(prev => ({ ...prev, paymentType: '' }));
+                        }
+                      }}
+                      className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                    />
+                    <Label htmlFor="pay" className="flex items-center gap-2 cursor-pointer">
+                      <ArrowUpCircle className="h-4 w-4 text-red-600" />
+                      <span className="text-sm font-medium">Pay</span>
+                      <span className="text-xs text-slate-500">(Disburse fund to member)</span>
+                    </Label>
+                  </div>
+                </div>
+                {errors.paymentType && (
+                  <div className="flex items-center gap-2 text-red-600 dark:text-red-400 text-sm">
+                    <AlertCircle className="h-4 w-4" />
+                    {errors.paymentType}
+                  </div>
+                )}
+              </div>
+
               {/* Member Selection */}
               <div className="space-y-2">
                 <Label htmlFor="member" className="text-sm font-medium text-slate-700 dark:text-slate-300 flex items-center gap-2">
@@ -451,12 +543,16 @@ const Payments = () => {
                   {isSubmitting ? (
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Recording Payment...
+                      Recording {paymentType === 'collect' ? 'Collection' : 'Payment'}...
                     </div>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4" />
-                      Record Payment
+                      {paymentType === 'collect' ? (
+                        <ArrowDownCircle className="h-4 w-4" />
+                      ) : (
+                        <ArrowUpCircle className="h-4 w-4" />
+                      )}
+                      Record {paymentType === 'collect' ? 'Collection' : 'Payment'}
                     </div>
                   )}
                 </Button>
@@ -487,6 +583,7 @@ const Payments = () => {
                   <TableHead className="font-semibold text-slate-900 dark:text-slate-100">Date</TableHead>
                   <TableHead className="font-semibold text-slate-900 dark:text-slate-100 hidden sm:table-cell">Time</TableHead>
                   <TableHead className="font-semibold text-slate-900 dark:text-slate-100">Member</TableHead>
+                  <TableHead className="font-semibold text-slate-900 dark:text-slate-100">Type</TableHead>
                   <TableHead className="font-semibold text-slate-900 dark:text-slate-100">Amount</TableHead>
                   <TableHead className="font-semibold text-slate-900 dark:text-slate-100 hidden md:table-cell">Recorded By</TableHead>
                   {(currentUser.role === 'admin' || currentUser.role === 'responsible_member') && (
@@ -497,7 +594,7 @@ const Payments = () => {
               <TableBody>
                 {visiblePayments.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={currentUser.role === 'admin' || currentUser.role === 'responsible_member' ? 6 : 5} className="text-center py-12">
+                    <TableCell colSpan={currentUser.role === 'admin' || currentUser.role === 'responsible_member' ? 7 : 6} className="text-center py-12">
                       <div className="flex flex-col items-center gap-3">
                         <div className="p-3 rounded-full bg-slate-100 dark:bg-slate-800">
                           <History className="h-6 w-6 text-slate-400" />
@@ -523,6 +620,23 @@ const Payments = () => {
                             </div>
                             {member?.name}
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge 
+                            variant="outline" 
+                            className={`flex items-center gap-1 ${
+                              payment.type === 'collect' 
+                                ? 'bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800' 
+                                : 'bg-red-50 text-red-700 border-red-200 dark:bg-red-950 dark:text-red-300 dark:border-red-800'
+                            }`}
+                          >
+                            {payment.type === 'collect' ? (
+                              <ArrowDownCircle className="h-3 w-3" />
+                            ) : (
+                              <ArrowUpCircle className="h-3 w-3" />
+                            )}
+                            {payment.type === 'collect' ? 'Collect' : 'Pay'}
+                          </Badge>
                         </TableCell>
                         <TableCell>
                           <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800">

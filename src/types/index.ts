@@ -23,6 +23,8 @@ export interface Payment {
   time: string;
   recorded_by: string;
   recorded_by_name: string;
+  type: 'collect' | 'pay';
+  notes?: string;
 }
 
 export interface FundRequest {
