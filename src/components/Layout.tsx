@@ -477,7 +477,8 @@ const Layout = ({ children }: LayoutProps) => {
       {/* Navigation Cards */}
       <nav className="px-4 py-6 flex-1 space-y-3 overflow-y-auto">
         {navigation.map((item, index) => {
-          const isActive = location.pathname === item.href;
+          const isActive = location.pathname === item.href && !showTermsDialog;
+          const isTermsActive = item.isAction && showTermsDialog;
           return (
             <div
               key={item.name}
@@ -493,13 +494,32 @@ const Layout = ({ children }: LayoutProps) => {
                   className={cn(
                     "group relative flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all duration-300 ease-out w-full text-left navigation-item",
                     "hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-background",
-                    "bg-white/60 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-slate-700/80 border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-sm"
+                    isTermsActive
+                      ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-xl shadow-blue-500/25 border border-blue-400/20"
+                      : "bg-white/60 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-slate-700/80 border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-sm"
                   )}
                 >
-                  <div className="p-1.5 rounded-xl transition-all duration-300 bg-slate-100/80 dark:bg-slate-700/80 group-hover:bg-slate-200/80 dark:group-hover:bg-slate-600/80">
-                    <item.icon className="h-4 w-4 transition-all duration-300 text-indigo-600" />
+                  <div className={cn(
+                    "p-1.5 rounded-xl transition-all duration-300",
+                    isTermsActive 
+                      ? "bg-white/20" 
+                      : "bg-slate-100/80 dark:bg-slate-700/80 group-hover:bg-slate-200/80 dark:group-hover:bg-slate-600/80"
+                  )}>
+                    <item.icon className={cn(
+                      "h-4 w-4 transition-all duration-300",
+                      isTermsActive ? "text-white" : "text-indigo-600"
+                    )} />
                   </div>
                   <span className="font-medium">{item.name}</span>
+                  {isTermsActive && (
+                    <div className="ml-auto flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+                      <Sparkles className="h-3 w-3 text-white/80" />
+                    </div>
+                  )}
+                  {isTermsActive && (
+                    <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/10 to-indigo-600/10 animate-pulse" />
+                  )}
                 </button>
               ) : (
                 <Link

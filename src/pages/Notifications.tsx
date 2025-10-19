@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { 
   Bell, 
   CheckCircle, 
@@ -12,7 +12,6 @@ import {
   CreditCard, 
   Heart, 
   Megaphone,
-  Filter,
   Check,
   Trash2,
   Clock,
@@ -30,10 +29,9 @@ import {
 import { Notification } from '@/types';
 
 const Notifications = () => {
-  const [selectedFilter, setSelectedFilter] = useState<'all' | 'unread' | 'read'>('all');
-  const [selectedType, setSelectedType] = useState<Notification['type'] | 'all'>('all');
-  const [selectedPriority, setSelectedPriority] = useState<Notification['priority'] | 'all'>('all');
   const [notifications, setNotifications] = useState(mockNotifications);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [notificationToDelete, setNotificationToDelete] = useState<string | null>(null);
 
   const getNotificationIcon = (type: Notification['type']) => {
     switch (type) {
@@ -110,18 +108,7 @@ const Notifications = () => {
     }
   };
 
-  const filteredNotifications = useMemo(() => {
-    return notifications.filter(notification => {
-      const matchesFilter = selectedFilter === 'all' || 
-        (selectedFilter === 'unread' && !notification.isRead) ||
-        (selectedFilter === 'read' && notification.isRead);
-      
-      const matchesType = selectedType === 'all' || notification.type === selectedType;
-      const matchesPriority = selectedPriority === 'all' || notification.priority === selectedPriority;
-      
-      return matchesFilter && matchesType && matchesPriority;
-    });
-  }, [notifications, selectedFilter, selectedType, selectedPriority]);
+  const filteredNotifications = notifications;
 
   const handleMarkAsRead = (notificationId: string) => {
     setNotifications(prev => 
@@ -142,23 +129,33 @@ const Notifications = () => {
   };
 
   const handleDeleteNotification = (notificationId: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== notificationId));
+    setNotificationToDelete(notificationId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDeleteNotification = () => {
+    if (notificationToDelete) {
+      setNotifications(prev => prev.filter(n => n.id !== notificationToDelete));
+      setDeleteDialogOpen(false);
+      setNotificationToDelete(null);
+    }
+  };
+
+  const cancelDeleteNotification = () => {
+    setDeleteDialogOpen(false);
+    setNotificationToDelete(null);
   };
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
   const totalCount = notifications.length;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 via-blue-800 to-indigo-800 dark:from-slate-100 dark:via-blue-200 dark:to-indigo-200 bg-clip-text text-transparent">
-            Notifications
-          </h1>
-          <p className="text-slate-600 dark:text-slate-400 mt-1">
-            Stay updated with all CBMS Marriage Fund activities
-          </p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Notifications</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">Stay updated with all CBMS Marriage Fund activities</p>
         </div>
         <div className="flex items-center gap-3">
           <Badge variant="outline" className="px-3 py-1">
@@ -179,52 +176,62 @@ const Notifications = () => {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-l-4 border-l-blue-500">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Total</p>
-                <p className="text-2xl font-bold text-slate-900 dark:text-slate-100">{totalCount}</p>
+      {/* Notification Statistics Cards */}
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-4">
+        <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-200 dark:border-blue-800">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-blue-500 text-white flex-shrink-0">
+                <Bell className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
-              <Bell className="h-8 w-8 text-blue-600" />
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-blue-600 dark:text-blue-400">Total Notifications</p>
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-900 dark:text-blue-100">{totalCount}</p>
+              </div>
             </div>
           </CardContent>
         </Card>
-        
-        <Card className="border-l-4 border-l-red-500">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">Unread</p>
-                <p className="text-2xl font-bold text-red-600">{unreadCount}</p>
+
+        <Card className="bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950/30 dark:to-rose-950/30 border-red-200 dark:border-red-800">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-red-500 text-white flex-shrink-0">
+                <EyeOff className="h-4 w-4 sm:h-5 sm:w-5" />
               </div>
-              <EyeOff className="h-8 w-8 text-red-600" />
+              
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-red-600 dark:text-red-400">Unread</p>
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-red-900 dark:text-red-100">{unreadCount}</p>
+              </div>
             </div>
           </CardContent>
         </Card>
-        
-        <Card className="border-l-4 border-l-green-500">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">High Priority</p>
-                <p className="text-2xl font-bold text-green-600">
+
+        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/30 dark:to-emerald-950/30 border-green-200 dark:border-green-800">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-green-500 text-white flex-shrink-0">
+                <Star className="h-4 w-4 sm:h-5 sm:w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-green-600 dark:text-green-400">High Priority</p>
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-green-900 dark:text-green-100">
                   {notifications.filter(n => n.priority === 'high' && !n.isRead).length}
                 </p>
               </div>
-              <Star className="h-8 w-8 text-green-600" />
             </div>
           </CardContent>
         </Card>
-        
-        <Card className="border-l-4 border-l-purple-500">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-400">This Week</p>
-                <p className="text-2xl font-bold text-purple-600">
+
+        <Card className="bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/30 dark:to-violet-950/30 border-purple-200 dark:border-purple-800">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-1.5 sm:p-2 rounded-lg sm:rounded-xl bg-purple-500 text-white flex-shrink-0">
+                <Clock className="h-4 w-4 sm:h-5 sm:w-5" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs sm:text-sm font-medium text-purple-600 dark:text-purple-400">This Week</p>
+                <p className="text-lg sm:text-xl lg:text-2xl font-bold text-purple-900 dark:text-purple-100">
                   {notifications.filter(n => {
                     const notificationDate = new Date(n.created_at);
                     const weekAgo = new Date();
@@ -233,85 +240,11 @@ const Notifications = () => {
                   }).length}
                 </p>
               </div>
-              <Clock className="h-8 w-8 text-purple-600" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filters
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-4">
-            {/* Read Status Filter */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Status:</span>
-              <div className="flex gap-1">
-                {(['all', 'unread', 'read'] as const).map((filter) => (
-                  <Button
-                    key={filter}
-                    variant={selectedFilter === filter ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setSelectedFilter(filter)}
-                    className="capitalize"
-                  >
-                    {filter}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {/* Type Filter */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Type:</span>
-              <div className="flex gap-1">
-                <Button
-                  variant={selectedType === 'all' ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setSelectedType('all')}
-                >
-                  All
-                </Button>
-                {(['success', 'warning', 'error', 'info', 'payment', 'wedding', 'announcement'] as const).map((type) => (
-                  <Button
-                    key={type}
-                    variant={selectedType === type ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setSelectedType(type)}
-                    className="capitalize"
-                  >
-                    {type}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            {/* Priority Filter */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-medium">Priority:</span>
-              <div className="flex gap-1">
-                {(['all', 'high', 'medium', 'low'] as const).map((priority) => (
-                  <Button
-                    key={priority}
-                    variant={selectedPriority === priority ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setSelectedPriority(priority)}
-                    className="capitalize"
-                  >
-                    {priority}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Notifications List */}
       <div className="space-y-4">
@@ -323,10 +256,7 @@ const Notifications = () => {
                 No notifications found
               </h3>
               <p className="text-slate-600 dark:text-slate-400">
-                {selectedFilter === 'all' 
-                  ? 'No notifications match your current filters.'
-                  : `No ${selectedFilter} notifications found.`
-                }
+                No notifications found.
               </p>
             </CardContent>
           </Card>
@@ -410,6 +340,32 @@ const Notifications = () => {
           ))
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-red-600" />
+              Delete Notification
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this notification? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDeleteNotification}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeleteNotification}
+              className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
