@@ -433,8 +433,8 @@ const Layout = ({ children }: LayoutProps) => {
     { name: 'Payments', href: '/payments', icon: CreditCard, color: 'text-green-600' },
     { name: 'Team', href: '/team', icon: Users, color: 'text-purple-600' },
     { name: 'Fund Requests', href: '/fund-requests', icon: Heart, color: 'text-red-600' },
-    { name: 'Notifications', href: '/notifications', icon: Bell, color: 'text-amber-600' },
     { name: 'Manage Users', href: '/manage-users', icon: Settings, color: 'text-orange-600' },
+    { name: 'Notifications', href: '/notifications', icon: Bell, color: 'text-amber-600' },
     { name: 'Terms of Use', href: '#', icon: FileCheck, color: 'text-indigo-600', isAction: true },
   ];
 
@@ -600,25 +600,6 @@ const Layout = ({ children }: LayoutProps) => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleFullscreenToggle}
-                  className="hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all duration-200"
-                >
-                  {isFullscreen ? (
-                    <Minimize className="h-4 w-4" />
-                  ) : (
-                    <Maximize className="h-4 w-4" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{isFullscreen ? "Exit Fullscreen (F11)" : "Enter Fullscreen (F11)"}</p>
-              </TooltipContent>
-            </Tooltip>
             <ThemeToggle />
             {isMobile && (
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>

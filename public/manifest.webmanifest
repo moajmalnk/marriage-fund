@@ -98,5 +98,13 @@
       "protocol": "web+cbmsfund",
       "url": "/?action=%s"
     }
+  ],
+  "permissions": [
+    "notifications"
+  ],
+  "exclude_permissions": [
+    "camera",
+    "microphone",
+    "geolocation"
   ]
 }
