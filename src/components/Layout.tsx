@@ -18,6 +18,9 @@ import {
   Sparkles,
   Shield,
   FileCheck,
+  Volume2,
+  VolumeX,
+  Languages,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { cn } from '@/lib/utils';
@@ -34,7 +37,10 @@ const Layout = ({ children }: LayoutProps) => {
   const [isMobile, setIsMobile] = useState(false);
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [showTermsDialog, setShowTermsDialog] = useState(false);
+  const [showAcknowledgeConfirmDialog, setShowAcknowledgeConfirmDialog] = useState(false);
   const [hasAcknowledgedTerms, setHasAcknowledgedTerms] = useState(false);
+  const [isEnglishVersion, setIsEnglishVersion] = useState(false);
+  const [isReading, setIsReading] = useState(false);
 
   // Handle responsive behavior
   useEffect(() => {
@@ -49,9 +55,61 @@ const Layout = ({ children }: LayoutProps) => {
 
   // Check if terms have been acknowledged
   useEffect(() => {
-    const acknowledged = localStorage.getItem('cbms-terms-acknowledged');
-    setHasAcknowledgedTerms(acknowledged === 'true');
+    const acknowledgedData = localStorage.getItem('cbms-terms-acknowledged');
+    if (acknowledgedData) {
+      try {
+        const parsed = JSON.parse(acknowledgedData);
+        setHasAcknowledgedTerms(parsed.acknowledged === true);
+      } catch {
+        // Handle old format (just 'true' string)
+        setHasAcknowledgedTerms(acknowledgedData === 'true');
+      }
+    }
   }, []);
+
+  // Get acknowledgement data for display
+  const getAcknowledgementData = () => {
+    const acknowledgedData = localStorage.getItem('cbms-terms-acknowledged');
+    if (acknowledgedData) {
+      try {
+        const parsed = JSON.parse(acknowledgedData);
+        if (parsed.acknowledged && parsed.date && parsed.userName) {
+          return {
+            userName: parsed.userName,
+            date: new Date(parsed.date).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            })
+          };
+        }
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  };
+
+  // Get all member acknowledgements
+  const getAllAcknowledgements = () => {
+    const acknowledgementsData = localStorage.getItem('cbms-all-acknowledgements');
+    if (acknowledgementsData) {
+      try {
+        return JSON.parse(acknowledgementsData);
+      } catch {
+        return {};
+      }
+    }
+    return {};
+  };
+
+  // Check if a specific member has acknowledged
+  const getMemberAcknowledgementStatus = (userId: string) => {
+    const allAcknowledgements = getAllAcknowledgements();
+    return allAcknowledgements[userId] || null;
+  };
 
   const handleLogoutClick = () => {
     setShowLogoutDialog(true);
@@ -62,10 +120,140 @@ const Layout = ({ children }: LayoutProps) => {
     setShowLogoutDialog(false);
   };
 
+  const handleAcknowledgeClick = () => {
+    setShowAcknowledgeConfirmDialog(true);
+  };
+
   const handleTermsAcknowledgment = () => {
-    localStorage.setItem('cbms-terms-acknowledged', 'true');
+    const acknowledgementData = {
+      acknowledged: true,
+      date: new Date().toISOString(),
+      userName: currentUser?.name,
+      userId: currentUser?.id,
+    };
+    localStorage.setItem('cbms-terms-acknowledged', JSON.stringify(acknowledgementData));
+    
+    // Store in all acknowledgements
+    const allAcknowledgements = getAllAcknowledgements();
+    allAcknowledgements[currentUser?.id || ''] = {
+      acknowledged: true,
+      date: new Date().toISOString(),
+      userName: currentUser?.name,
+    };
+    localStorage.setItem('cbms-all-acknowledgements', JSON.stringify(allAcknowledgements));
+    
     setHasAcknowledgedTerms(true);
+    setShowAcknowledgeConfirmDialog(false);
     setShowTermsDialog(false);
+  };
+
+  // Voice reading function
+  const handleVoiceReading = (language: 'en') => {
+    if (isReading) {
+      window.speechSynthesis.cancel();
+      setIsReading(false);
+      return;
+    }
+
+    const termsDialog = document.querySelector('[role="dialog"]');
+    if (!termsDialog) return;
+
+    // Get the English content for voice reading
+    const englishContent = getEnglishContent();
+    const textContent = englishContent || termsDialog.textContent || '';
+    
+    const utterance = new SpeechSynthesisUtterance(textContent);
+    
+    // Set professional voice settings
+    utterance.lang = 'en-US';
+    utterance.rate = 0.85; // Slightly slower for professional delivery
+    utterance.pitch = 0.9; // Slightly lower pitch for professional tone
+    utterance.volume = 1.0; // Full volume
+    
+    // Try to select a professional female voice
+    const selectProfessionalVoice = () => {
+      const voices = window.speechSynthesis.getVoices();
+      const professionalVoice = voices.find(voice => 
+        voice.lang.startsWith('en') && 
+        (voice.name.includes('Female') || 
+         voice.name.includes('Susan') || 
+         voice.name.includes('Karen') || 
+         voice.name.includes('Samantha') ||
+         voice.name.includes('Victoria') ||
+         voice.name.includes('Alex') ||
+         voice.name.includes('Enhanced') ||
+         voice.name.includes('Premium') ||
+         voice.name.includes('Microsoft') ||
+         voice.name.includes('Google'))
+      );
+      
+      if (professionalVoice) {
+        utterance.voice = professionalVoice;
+      }
+    };
+    
+    // Try to select voice immediately
+    selectProfessionalVoice();
+    
+    // If voices aren't loaded yet, wait for them
+    if (window.speechSynthesis.getVoices().length === 0) {
+      window.speechSynthesis.addEventListener('voiceschanged', selectProfessionalVoice, { once: true });
+    }
+    
+    utterance.onstart = () => setIsReading(true);
+    utterance.onend = () => setIsReading(false);
+    utterance.onerror = () => setIsReading(false);
+    
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  };
+
+
+  // Get English content for voice reading
+  const getEnglishContent = () => {
+    const englishContent = `
+      CBMS Marriage Fund Regulations
+      
+      Purpose and Scope: This Marriage Fund has been formed to provide financial support to CBMS members for their wedding expenses. All members participating in this fund must strictly adhere to the following rules and regulations.
+      
+      Section 1 - Membership Eligibility: Only permanent members of CBMS are eligible to join this fund. Matters related to inclusion of new members, exclusion, or membership duration shall be decided by CBMS authorized authorities.
+      
+      Section 2 - Fund Contribution: Each member must contribute 5000 Rupees on the occasion of another member's wedding. It is each member's personal responsibility to pay the amount on time.
+      
+      Section 3 - Marriage Notification: Members must inform the fund coordinators at least 45 days in advance when their wedding is finalized. The coordinators shall issue official notification to all members 30 days before the wedding for payment collection.
+      
+      Section 4 - Payment Schedule: All members must submit their contribution to the responsible persons at least one week before the wedding. Those who receive the fund are obligated to contribute the specified amount for subsequent weddings.
+      
+      Section 5 - Disbursement of Fund: The collected amount shall be disbursed to the concerned member on the day before or on the wedding day. In emergency situations, if funds are needed earlier, the coordinators must be informed at least two months in advance.
+      
+      Section 6 - Duration of the Fund: This fund will naturally conclude once all members' weddings are completed. A member shall not withdraw from the fund after joining.
+      
+      Section 7 - Delayed Payment Clause: For those unable to pay on time, the amount will be recorded as debt in their name. The outstanding amount must be settled within one month.
+      
+      Section 8 - Special Cases: If a member's wedding is postponed or cancelled, the previously collected amount will remain valid for the next wedding occasion. For non-payment cases, necessary actions may be taken as per group decision.
+      
+      Section 9 - Fund Management and Transparency: A Register or Google Sheet or Account Book must be used to record collected and disbursed amounts. Fund management shall be handled by at least two responsible persons. Receipts and Digital records must be provided for all transactions.
+      
+      Section 10 - Suggestions and Feedback: Any opinions or suggestions related to the fund can be directly shared with any of the coordinators.
+      
+      Section 11 - Closure and Remaining Funds: The fund will conclude once all members' weddings are completed. If there are any remaining funds at the final stage, they may be utilized as per the decision taken in the general meeting.
+      
+      Section 12 - Acknowledgement and Signatures: Having read and understood this regulation completely, the following members hereby acknowledge and accept all the terms mentioned herein.
+    `;
+    return englishContent;
+  };
+
+  const handleVoiceClick = () => {
+    if (isReading) {
+      window.speechSynthesis.cancel();
+      setIsReading(false);
+    } else {
+      handleVoiceReading('en');
+    }
+  };
+
+  const handleTranslationToggle = () => {
+    setIsEnglishVersion(!isEnglishVersion);
   };
 
   // Get responsible members and regular members from actual user data
@@ -337,140 +525,378 @@ const Layout = ({ children }: LayoutProps) => {
       <Dialog open={showTermsDialog} onOpenChange={setShowTermsDialog}>
         <DialogContent className="w-[95vw] max-w-[95vw] sm:w-auto sm:max-w-4xl mx-2 sm:mx-4 h-[90vh] sm:h-auto max-h-[90vh] sm:max-h-[80vh] overflow-y-auto">
           <DialogHeader className="pb-4">
-            <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex-1">
+                <DialogTitle className="flex items-center gap-2 text-lg sm:text-xl mb-2">
               <div className="p-2 rounded-lg bg-indigo-500 text-white">
                 <FileCheck className="h-5 w-5" />
               </div>
-              CBMS വിവാഹക്കുറി നിയമാവലി (Marriage Fund Regulations)
+                  {isEnglishVersion 
+                    ? "CBMS Marriage Fund Regulations"
+                    : "CBMS വിവാഹക്കുറി നിയമാവലി (Marriage Fund Regulations)"
+                  }
             </DialogTitle>
             <DialogDescription className="text-sm sm:text-base">
-              Marriage Fund Terms and Conditions - Please read and acknowledge
+                  {isEnglishVersion
+                    ? "Marriage Fund Terms and Conditions - Please read and acknowledge"
+                    : "വിവാഹ ഫണ്ട് നിബന്ധനകളും വ്യവസ്ഥകളും - ദയവായി വായിച്ച് അംഗീകരിക്കുക"
+                  }
             </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
           
           <div className="space-y-6 text-sm sm:text-base leading-relaxed">
             <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">ആമുഖം (Purpose & Scope)</h3>
+              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
+                {isEnglishVersion ? "Purpose & Scope" : "ആമുഖം (Purpose & Scope)"}
+              </h3>
               <p className="text-blue-800 dark:text-blue-200">
-                CBMS അംഗങ്ങളുടെ വിവാഹച്ചെലവുകൾക്ക് സാമ്പത്തിക പിന്തുണ നൽകുന്നതിനായി ഈ "വിവാഹക്കുറി" രൂപീകരിച്ചിരിക്കുന്നു.
-                ഈ കുറിയിൽ അംഗങ്ങളാകുന്ന എല്ലാവരും താഴെപ്പറയുന്ന നിയമങ്ങളും വ്യവസ്ഥകളും കർശനമായി പാലിക്കേണ്ടതാണ്.
+                {isEnglishVersion 
+                  ? "This 'Marriage Fund' has been formed to provide financial support to CBMS members for their wedding expenses. All members participating in this fund must strictly adhere to the following rules and regulations."
+                  : "CBMS അംഗങ്ങളുടെ വിവാഹച്ചെലവുകൾക്ക് സാമ്പത്തിക പിന്തുണ നൽകുന്നതിനായി ഈ \"വിവാഹക്കുറി\" രൂപീകരിച്ചിരിക്കുന്നു. ഈ കുറിയിൽ അംഗങ്ങളാകുന്ന എല്ലാവരും താഴെപ്പറയുന്ന നിയമങ്ങളും വ്യവസ്ഥകളും കർശനമായി പാലിക്കേണ്ടതാണ്."
+                }
               </p>
             </div>
 
             <div className="space-y-4">
               <div>
-                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">1. അംഗത്വം (Membership Eligibility)</h4>
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                  {isEnglishVersion ? "1. Membership Eligibility" : "1. അംഗത്വം (Membership Eligibility)"}
+                </h4>
                 <p className="text-slate-700 dark:text-slate-300">
-                  ഈ കുറിയിൽ അംഗമാകാൻ CBMS യിലെ സ്ഥിരാംഗങ്ങൾക്കു മാത്രമേ അർഹതയുള്ളൂ. പുതിയ അംഗങ്ങളെ ഉൾപ്പെടുത്തൽ, ഒഴിവാക്കൽ, അല്ലെങ്കിൽ അംഗത്വ കാലാവധി സംബന്ധിച്ച കാര്യങ്ങൾ CBMS അംഗീകൃത അധികാരികൾ തീരുമാനിക്കും.
+                  {isEnglishVersion
+                    ? "Only permanent members of CBMS are eligible to join this fund. Matters related to inclusion of new members, exclusion, or membership duration shall be decided by CBMS authorized authorities."
+                    : "ഈ കുറിയിൽ അംഗമാകാൻ CBMS യിലെ സ്ഥിരാംഗങ്ങൾക്കു മാത്രമേ അർഹതയുള്ളൂ. പുതിയ അംഗങ്ങളെ ഉൾപ്പെടുത്തൽ, ഒഴിവാക്കൽ, അല്ലെങ്കിൽ അംഗത്വ കാലാവധി സംബന്ധിച്ച കാര്യങ്ങൾ CBMS അംഗീകൃത അധികാരികൾ തീരുമാനിക്കും."
+                  }
                 </p>
               </div>
 
               <div>
-                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">2. പണസമാഹരണവും (Fund Contribution)</h4>
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                  {isEnglishVersion ? "2. Fund Contribution" : "2. പണസമാഹരണവും (Fund Contribution)"}
+                </h4>
                 <p className="text-slate-700 dark:text-slate-300">
-                  ഓരോ അംഗവും മറ്റൊരു അംഗത്തിന്റെ വിവാഹാവസരത്തിൽ ₹5000 (അയ്യായിരം രൂപ) വീതം അടയ്ക്കേണ്ടതാണ്. പണം കൃത്യമായി സമയത്ത് അടയ്ക്കേണ്ടത് ഓരോ അംഗത്തിന്റെയും വ്യക്തിപരമായ ഉത്തരവാദിത്വമാണ്.
+                  {isEnglishVersion
+                    ? "Each member must contribute ₹5000 (Five Thousand Rupees) on the occasion of another member's wedding. It is each member's personal responsibility to pay the amount on time."
+                    : "ഓരോ അംഗവും മറ്റൊരു അംഗത്തിന്റെ വിവാഹാവസരത്തിൽ ₹5000 (അയ്യായിരം രൂപ) വീതം അടയ്ക്കേണ്ടതാണ്. പണം കൃത്യമായി സമയത്ത് അടയ്ക്കേണ്ടത് ഓരോ അംഗത്തിന്റെയും വ്യക്തിപരമായ ഉത്തരവാദിത്വമാണ്."
+                  }
                 </p>
               </div>
 
               <div>
-                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">3. വിവാഹ അറിയിപ്പ് (Marriage Notification)</h4>
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                  {isEnglishVersion ? "3. Marriage Notification" : "3. വിവാഹ അറിയിപ്പ് (Marriage Notification)"}
+                </h4>
                 <p className="text-slate-700 dark:text-slate-300">
-                  കുറിയിൽ അംഗമായിട്ടുള്ളവർ, തങ്ങളുടെ വിവാഹം നിശ്ചയിച്ചാൽ കുറഞ്ഞത് 45 ദിവസ മുമ്പ് കുറിയുടെ ഉത്തരവാദികളോട് വിവരം അറിയിക്കണം. ഉത്തരവാദിത്വമുള്ളവർ എല്ലാ അംഗങ്ങളെയും വിവാഹത്തിന് 30 ദിവസങ്ങൾക്ക് മുമ്പ് പണമടക്കാനുള്ള ഔദ്യോഗിക അറിയിപ്പ് നൽകേണ്ടതാണ്.
+                  {isEnglishVersion
+                    ? "Members must inform the fund coordinators at least 45 days in advance when their wedding is finalized. The coordinators shall issue official notification to all members 30 days before the wedding for payment collection."
+                    : "കുറിയിൽ അംഗമായിട്ടുള്ളവർ, തങ്ങളുടെ വിവാഹം നിശ്ചയിച്ചാൽ കുറഞ്ഞത് 45 ദിവസ മുമ്പ് കുറിയുടെ ഉത്തരവാദികളോട് വിവരം അറിയിക്കണം. ഉത്തരവാദിത്വമുള്ളവർ എല്ലാ അംഗങ്ങളെയും വിവാഹത്തിന് 30 ദിവസങ്ങൾക്ക് മുമ്പ് പണമടക്കാനുള്ള ഔദ്യോഗിക അറിയിപ്പ് നൽകേണ്ടതാണ്."
+                  }
                 </p>
               </div>
 
               <div>
-                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">4. പണം അടയ്ക്കൽ സമയക്രമം (Payment Schedule)</h4>
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                  {isEnglishVersion ? "4. Payment Schedule" : "4. പണം അടയ്ക്കൽ സമയക്രമം (Payment Schedule)"}
+                </h4>
                 <p className="text-slate-700 dark:text-slate-300">
-                  എല്ലാ അംഗങ്ങളും വിവാഹത്തിന് ഒരാഴ്ച മുമ്പ് തന്നെ പണം ഉത്തരവാദികളായ വ്യക്തികൾക്ക് കൈമാറിക്കഴിഞ്ഞിരിക്കണം. പണം കൈപ്പറ്റിയവരും (വിവാഹിതരും) തങ്ങളുടെ കടമയായി നിശ്ചിത തുക പിന്നീട് അടയ്ക്കേണ്ടതാണ്.
+                  {isEnglishVersion
+                    ? "All members must submit their contribution to the responsible persons at least one week before the wedding. Those who receive the fund (married members) are obligated to contribute the specified amount for subsequent weddings."
+                    : "എല്ലാ അംഗങ്ങളും വിവാഹത്തിന് ഒരാഴ്ച മുമ്പ് തന്നെ പണം ഉത്തരവാദികളായ വ്യക്തികൾക്ക് കൈമാറിക്കഴിഞ്ഞിരിക്കണം. പണം കൈപ്പറ്റിയവരും (വിവാഹിതരും) തങ്ങളുടെ കടമയായി നിശ്ചിത തുക പിന്നീട് അടയ്ക്കേണ്ടതാണ്."
+                  }
                 </p>
               </div>
 
               <div>
-                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">5. പണം കൈമാറ്റം (Disbursement of Fund)</h4>
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                  {isEnglishVersion ? "5. Disbursement of Fund" : "5. പണം കൈമാറ്റം (Disbursement of Fund)"}
+                </h4>
                 <p className="text-slate-700 dark:text-slate-300">
-                  പിരിച്ചെടുത്ത തുക വിവാഹത്തിൻ്റെ മുൻദിവസമോ വിവാഹദിനത്തെയോ ആയിരിക്കും ബന്ധപ്പെട്ട അംഗത്തിന് കൈമാറുക. അത്യാവശ്യ സാഹചര്യങ്ങളിൽ (ഉദാഹരണം: അടിയന്തര ചെലവ്) പണം ആവശ്യമായാൽ, അതിനു കുറഞ്ഞത് രണ്ട് മാസം മുമ്പ് ഉത്തരവാദിത്വമുള്ളവരെ വിവരം അറിയിക്കണം.
+                  {isEnglishVersion
+                    ? "The collected amount shall be disbursed to the concerned member on the day before or on the wedding day. In emergency situations (e.g., urgent expenses), if funds are needed earlier, the coordinators must be informed at least two months in advance."
+                    : "പിരിച്ചെടുത്ത തുക വിവാഹത്തിൻ്റെ മുൻദിവസമോ വിവാഹദിനത്തെയോ ആയിരിക്കും ബന്ധപ്പെട്ട അംഗത്തിന് കൈമാറുക. അത്യാവശ്യ സാഹചര്യങ്ങളിൽ (ഉദാഹരണം: അടിയന്തര ചെലവ്) പണം ആവശ്യമായാൽ, അതിനു കുറഞ്ഞത് രണ്ട് മാസം മുമ്പ് ഉത്തരവാദിത്വമുള്ളവരെ വിവരം അറിയിക്കണം."
+                  }
                 </p>
               </div>
 
               <div>
-                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">6. കുറിയുടെ നിലനിൽപ്പ് (Duration of the Fund)</h4>
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                  {isEnglishVersion ? "6. Duration of the Fund" : "6. കുറിയുടെ നിലനിൽപ്പ് (Duration of the Fund)"}
+                </h4>
                 <p className="text-slate-700 dark:text-slate-300">
-                  ഈ കുറി അതിലെ എല്ലാ അംഗങ്ങളുടെയും വിവാഹങ്ങൾ കഴിഞ്ഞാൽ സ്വാഭാവികമായി അവസാനിക്കുന്നതാണ്. ഒരു വ്യക്തി അംഗത്വം ആരംഭിച്ചതിനുശേഷം പിൻമാറാൻ പാടില്ല.
+                  {isEnglishVersion
+                    ? "This fund will naturally conclude once all members' weddings are completed. A member shall not withdraw from the fund after joining."
+                    : "ഈ കുറി അതിലെ എല്ലാ അംഗങ്ങളുടെയും വിവാഹങ്ങൾ കഴിഞ്ഞാൽ സ്വാഭാവികമായി അവസാനിക്കുന്നതാണ്. ഒരു വ്യക്തി അംഗത്വം ആരംഭിച്ചതിനുശേഷം പിൻമാറാൻ പാടില്ല."
+                  }
                 </p>
               </div>
 
               <div>
-                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">7. വൈകിയ പണമടവ് (Delayed Payment Clause)</h4>
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                  {isEnglishVersion ? "7. Delayed Payment Clause" : "7. വൈകിയ പണമടവ് (Delayed Payment Clause)"}
+                </h4>
                 <p className="text-slate-700 dark:text-slate-300">
-                  നിശ്ചിത സമയത്ത് പണമടക്കാൻ സാധിക്കാത്തവർക്ക് (മുഴുവനായോ ഭാഗികമായോ) ആ തുക അവരുടെ പേരിൽ കടമായി രേഖപ്പെടുത്തും. അവശേഷിക്കുന്ന തുക ഒരു മാസത്തിനകം തീർപ്പാക്കേണ്ടതാണ്.
+                  {isEnglishVersion
+                    ? "For those unable to pay on time (fully or partially), the amount will be recorded as debt in their name. The outstanding amount must be settled within one month."
+                    : "നിശ്ചിത സമയത്ത് പണമടക്കാൻ സാധിക്കാത്തവർക്ക് (മുഴുവനായോ ഭാഗികമായോ) ആ തുക അവരുടെ പേരിൽ കടമായി രേഖപ്പെടുത്തും. അവശേഷിക്കുന്ന തുക ഒരു മാസത്തിനകം തീർപ്പാക്കേണ്ടതാണ്."
+                  }
                 </p>
               </div>
 
               <div>
-                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">8. പ്രത്യേക സാഹചര്യങ്ങൾ (Special Cases)</h4>
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                  {isEnglishVersion ? "8. Special Cases" : "8. പ്രത്യേക സാഹചര്യങ്ങൾ (Special Cases)"}
+                </h4>
                 <p className="text-slate-700 dark:text-slate-300">
-                  ഒരു അംഗത്തിന്റെ വിവാഹം മാറ്റിയാൽ അല്ലെങ്കിൽ റദ്ദായാൽ, മുൻപ് അടച്ച തുക അടുത്ത വിവാഹാവസരത്തിൽ നിലനിൽക്കും. പണം അടക്കാത്തവർക്ക്, ഗ്രൂപ്പിൻ്റെ തീരുമാനപ്രകാരം ആവശ്യമായ നടപടികൾ / നിയമനടപടി സ്വീകരിക്കാം.
+                  {isEnglishVersion
+                    ? "If a member's wedding is postponed or cancelled, the previously collected amount will remain valid for the next wedding occasion. For non-payment cases, necessary actions/legal measures may be taken as per group decision."
+                    : "ഒരു അംഗത്തിന്റെ വിവാഹം മാറ്റിയാൽ അല്ലെങ്കിൽ റദ്ദായാൽ, മുൻപ് അടച്ച തുക അടുത്ത വിവാഹാവസരത്തിൽ നിലനിൽക്കും. പണം അടക്കാത്തവർക്ക്, ഗ്രൂപ്പിൻ്റെ തീരുമാനപ്രകാരം ആവശ്യമായ നടപടികൾ / നിയമനടപടി സ്വീകരിക്കാം."
+                  }
                 </p>
               </div>
 
               <div>
-                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">9. ഫണ്ട് നിയന്ത്രണം & സുതാര്യത (Fund Management & Transparency)</h4>
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                  {isEnglishVersion ? "9. Fund Management & Transparency" : "9. ഫണ്ട് നിയന്ത്രണം & സുതാര്യത (Fund Management & Transparency)"}
+                </h4>
                 <p className="text-slate-700 dark:text-slate-300">
-                  പിരിച്ചെടുക്കുന്ന തുകയും കൈമാറുന്ന തുകയും രേഖപ്പെടുത്താൻ റജിസ്റ്റർ / Google Sheet / അക്കൗണ്ട് ബുക്ക് നിർബന്ധമായും ഉപയോഗിക്കണം. പണം കൈകാര്യം ചെയ്യുക കുറഞ്ഞത് രണ്ട് ഉത്തരവാദികളായ വ്യക്തികളാണ് ചെയ്യേണ്ടത്. എല്ലാ ഇടപാടുകൾക്കും രസീത് / ഡിജിറ്റൽ രേഖ നൽകേണ്ടതാണ്.
+                  {isEnglishVersion
+                    ? "A Register / Google Sheet / Account Book must be used to record collected and disbursed amounts. Fund management shall be handled by at least two responsible persons. Receipts / Digital records must be provided for all transactions."
+                    : "പിരിച്ചെടുക്കുന്ന തുകയും കൈമാറുന്ന തുകയും രേഖപ്പെടുത്താൻ റജിസ്റ്റർ / Google Sheet / അക്കൗണ്ട് ബുക്ക് നിർബന്ധമായും ഉപയോഗിക്കണം. പണം കൈകാര്യം ചെയ്യുക കുറഞ്ഞത് രണ്ട് ഉത്തരവാദികളായ വ്യക്തികളാണ് ചെയ്യേണ്ടത്. എല്ലാ ഇടപാടുകൾക്കും രസീത് / ഡിജിറ്റൽ രേഖ നൽകേണ്ടതാണ്."
+                  }
                 </p>
               </div>
 
               <div>
-                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">10. അഭിപ്രായങ്ങളും നിർദ്ദേശങ്ങളും (Suggestions & Feedback)</h4>
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                  {isEnglishVersion ? "10. Suggestions & Feedback" : "10. അഭിപ്രായങ്ങളും നിർദ്ദേശങ്ങളും (Suggestions & Feedback)"}
+                </h4>
                 <p className="text-slate-700 dark:text-slate-300">
-                  കുറിയുമായി ബന്ധപ്പെട്ട ഏതു വിധത്തിലുള്ള അഭിപ്രായങ്ങളോ നിർദ്ദേശങ്ങളോ ഉത്തരവാദികളിൽ ആരോടും നേരിട്ട് പങ്കുവെക്കാവുന്നതാണ്.
+                  {isEnglishVersion
+                    ? "Any opinions or suggestions related to the fund can be directly shared with any of the coordinators."
+                    : "കുറിയുമായി ബന്ധപ്പെട്ട ഏതു വിധത്തിലുള്ള അഭിപ്രായങ്ങളോ നിർദ്ദേശങ്ങളോ ഉത്തരവാദികളിൽ ആരോടും നേരിട്ട് പങ്കുവെക്കാവുന്നതാണ്."
+                  }
                 </p>
               </div>
 
               <div>
-                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">11. അവസാന ഘട്ടം (Closure & Remaining Funds)</h4>
+                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                  {isEnglishVersion ? "11. Closure & Remaining Funds" : "11. അവസാന ഘട്ടം (Closure & Remaining Funds)"}
+                </h4>
                 <p className="text-slate-700 dark:text-slate-300">
-                  എല്ലാ അംഗങ്ങളുടെയും വിവാഹം കഴിഞ്ഞാൽ കുറി അവസാനിക്കും. അവസാന ഘട്ടത്തിൽ ബാക്കിയുള്ള തുക ഉണ്ടെങ്കിൽ അത് പൊതുയോഗത്തിൽ എടുത്ത തീരുമാനം അനുസരിച്ച് വിനിയോഗിക്കാവുന്നതാണ്.
+                  {isEnglishVersion
+                    ? "The fund will conclude once all members' weddings are completed. If there are any remaining funds at the final stage, they may be utilized as per the decision taken in the general meeting."
+                    : "എല്ലാ അംഗങ്ങളുടെയും വിവാഹം കഴിഞ്ഞാൽ കുറി അവസാനിക്കും. അവസാന ഘട്ടത്തിൽ ബാക്കിയുള്ള തുക ഉണ്ടെങ്കിൽ അത് പൊതുയോഗത്തിൽ എടുത്ത തീരുമാനം അനുസരിച്ച് വിനിയോഗിക്കാവുന്നതാണ്."
+                  }
                 </p>
               </div>
 
-              <div className="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-4">
-                <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-3">12. അംഗീകാരം (Acknowledgement & Signatures)</h4>
-                <p className="text-slate-700 dark:text-slate-300 mb-4">
-                  ഈ നിയമാവലി പൂർണ്ണമായി വായിച്ചറിഞ്ഞ്, ഇതിലെ എല്ലാ വ്യവസ്ഥകളും അംഗീകരിച്ചുകൊണ്ട് താഴെപ്പറയുന്നവർ ഒപ്പുവെക്കുന്നു.
-                </p>
+              {/* Official Document Style */}
+              <div className="relative bg-white dark:bg-slate-900 border-4 border-double border-amber-700/30 dark:border-amber-600/30 rounded-none shadow-2xl overflow-hidden">
+                {/* Decorative corners */}
+                <div className="absolute top-0 left-0 w-16 h-16 border-l-4 border-t-4 border-amber-700/40 dark:border-amber-600/40"></div>
+                <div className="absolute top-0 right-0 w-16 h-16 border-r-4 border-t-4 border-amber-700/40 dark:border-amber-600/40"></div>
+                <div className="absolute bottom-0 left-0 w-16 h-16 border-l-4 border-b-4 border-amber-700/40 dark:border-amber-600/40"></div>
+                <div className="absolute bottom-0 right-0 w-16 h-16 border-r-4 border-b-4 border-amber-700/40 dark:border-amber-600/40"></div>
                 
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div>
-                    <h5 className="font-medium text-slate-900 dark:text-slate-100 mb-2">ഉത്തരവാദിത്വമുള്ളവർ (Responsible Members):</h5>
-                    <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
-                      {responsibleMembers.map((member) => (
-                        <li key={member.id}>• {member.name}</li>
-                      ))}
-                    </ul>
+                <div className="relative p-8 sm:p-10">
+                  {/* Official Seal */}
+                  <div className="flex items-center justify-center mb-6">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-gradient-to-br from-amber-500 to-amber-700 rounded-full blur-md opacity-20"></div>
+                      <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-amber-600 to-amber-800 dark:from-amber-500 dark:to-amber-700 flex items-center justify-center border-4 border-amber-300 dark:border-amber-400 shadow-lg">
+                        <FileCheck className="h-10 w-10 text-white" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Header */}
+                  <div className="text-center mb-8 space-y-2">
+                    <h4 className="text-2xl font-serif font-bold text-slate-900 dark:text-slate-100 tracking-wide">
+                      {isEnglishVersion ? "Acknowledgement & Signatures" : "അംഗീകാരം"}
+                    </h4>
+                    <p className="text-sm font-semibold text-amber-700 dark:text-amber-500 uppercase tracking-widest">
+                      {isEnglishVersion ? "Section 12" : "Acknowledgement & Signatures"}
+                    </p>
+                    <div className="flex items-center justify-center gap-2 mt-4">
+                      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-700/40 to-transparent"></div>
+                      <div className="w-2 h-2 rounded-full bg-amber-700/40"></div>
+                      <div className="h-px flex-1 bg-gradient-to-r from-transparent via-amber-700/40 to-transparent"></div>
+                    </div>
+                  </div>
+
+                  {/* Declaration Text */}
+                  <div className="mb-8 text-center max-w-3xl mx-auto">
+                    <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-base">
+                      {isEnglishVersion
+                        ? "Having read and understood this regulation completely, the following members hereby acknowledge and accept all the terms mentioned herein."
+                        : "ഈ നിയമാവലി പൂർണ്ണമായി വായിച്ചറിഞ്ഞ്, ഇതിലെ എല്ലാ വ്യവസ്ഥകളും അംഗീകരിച്ചുകൊണ്ട് താഴെപ്പറയുന്നവർ ഒപ്പുവെക്കുന്നു."
+                      }
+                    </p>
+                    {!isEnglishVersion && (
+                      <p className="text-sm text-slate-600 dark:text-slate-400 mt-2 italic">
+                        "Having read and understood all regulations, the following members hereby acknowledge and accept these terms."
+                      </p>
+                    )}
                   </div>
                   
+                  {/* Members Grid */}
+                  <div className="grid gap-8 lg:grid-cols-2 mb-8">
+                    {/* Responsible Members */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3 pb-3 border-b-2 border-amber-700/20 dark:border-amber-600/20">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center shadow-md">
+                          <Shield className="h-5 w-5 text-white" />
+                        </div>
                   <div>
-                    <h5 className="font-medium text-slate-900 dark:text-slate-100 mb-2">അംഗങ്ങൾ (Members):</h5>
-                    <ul className="text-sm text-slate-600 dark:text-slate-400 space-y-1">
-                      {regularMembers.map((member) => (
-                        <li key={member.id}>• {member.name}</li>
-                      ))}
-                    </ul>
+                          <h5 className="font-bold text-slate-900 dark:text-slate-100 text-base">
+                            {isEnglishVersion ? "Responsible Members" : "ഉത്തരവാദിത്വമുള്ളവർ"}
+                          </h5>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">
+                            {isEnglishVersion ? "Fund Coordinators" : "Responsible Members"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        {responsibleMembers.map((member, index) => {
+                          const memberStatus = getMemberAcknowledgementStatus(member.id);
+                          const isApproved = memberStatus?.acknowledged === true;
+                          
+                          return (
+                            <div 
+                              key={member.id}
+                              className="group grid grid-cols-[auto_1fr_auto] items-center gap-4 py-3 px-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                            >
+                              <span className="font-mono text-sm font-bold text-indigo-600 dark:text-indigo-400">
+                                {String(index + 1).padStart(2, '0')}.
+                              </span>
+                              <div className="flex items-center gap-3">
+                                <span className="font-medium text-slate-800 dark:text-slate-200 text-sm">
+                                  {member.name}
+                                </span>
+                                <div className="h-px flex-1 bg-gradient-to-r from-slate-300 via-slate-200 to-transparent dark:from-slate-600 dark:via-slate-700 dark:to-transparent"></div>
+                              </div>
+                              {isApproved ? (
+                                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/20 border border-green-300 dark:border-green-700 shadow-sm min-w-[100px] justify-center">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-sm shadow-green-500/50"></div>
+                                  <span className="text-xs font-bold text-green-700 dark:text-green-300 uppercase tracking-wide">
+                                    Approved
+                                  </span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-800/20 border border-amber-300 dark:border-amber-700 shadow-sm min-w-[100px] justify-center">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50"></div>
+                                  <span className="text-xs font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wide">
+                                    Pending
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
                   </div>
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                    Approved by: 
-                  </p>
+                    {/* Regular Members */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3 pb-3 border-b-2 border-amber-700/20 dark:border-amber-600/20">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-md">
+                          <Users className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <h5 className="font-bold text-slate-900 dark:text-slate-100 text-base">
+                            {isEnglishVersion ? "Members" : "അംഗങ്ങൾ"}
+                          </h5>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">
+                            {isEnglishVersion ? "Fund Participants" : "Members"}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        {regularMembers.map((member, index) => {
+                          const memberStatus = getMemberAcknowledgementStatus(member.id);
+                          const isApproved = memberStatus?.acknowledged === true;
+                          
+                          return (
+                            <div 
+                              key={member.id}
+                              className="group grid grid-cols-[auto_1fr_auto] items-center gap-4 py-3 px-2 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                            >
+                              <span className="font-mono text-sm font-bold text-blue-600 dark:text-blue-400">
+                                {String(index + 1).padStart(2, '0')}.
+                              </span>
+                              <div className="flex items-center gap-3">
+                                <span className="font-medium text-slate-800 dark:text-slate-200 text-sm">
+                                  {member.name}
+                                </span>
+                                <div className="h-px flex-1 bg-gradient-to-r from-slate-300 via-slate-200 to-transparent dark:from-slate-600 dark:via-slate-700 dark:to-transparent"></div>
+                              </div>
+                              {isApproved ? (
+                                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-800/20 border border-green-300 dark:border-green-700 shadow-sm min-w-[100px] justify-center">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-sm shadow-green-500/50"></div>
+                                  <span className="text-xs font-bold text-green-700 dark:text-green-300 uppercase tracking-wide">
+                                    Approved
+                                  </span>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-800/20 border border-amber-300 dark:border-amber-700 shadow-sm min-w-[100px] justify-center">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50"></div>
+                                  <span className="text-xs font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wide">
+                                    Pending
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Official Footer */}
+                  <div className="mt-8 pt-6 border-t-2 border-double border-amber-700/20 dark:border-amber-600/20">
+                    <div className="flex items-center justify-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                      <div className="h-px w-12 bg-amber-700/20"></div>
+                      <span className="font-serif italic text-center px-2">
+                        {isEnglishVersion
+                          ? "This document serves as official acknowledgement of the CBMS Marriage Fund regulations"
+                          : "ഈ രേഖ CBMS വിവാഹ ഫണ്ട് നിയന്ത്രണങ്ങളുടെ ഔദ്യോഗിക അംഗീകാരമായി പ്രവർത്തിക്കുന്നു"
+                        }
+                      </span>
+                      <div className="h-px w-12 bg-amber-700/20"></div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
+          {hasAcknowledgedTerms && getAcknowledgementData() && (
+            <div className="mt-6 pt-4 border-t border-slate-200 dark:border-slate-700">
+              <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-green-500 text-white flex-shrink-0">
+                    <FileCheck className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="font-semibold text-green-900 dark:text-green-100 mb-1">
+                      Terms Acknowledged
+                    </h4>
+                    <p className="text-sm text-green-800 dark:text-green-200">
+                      Acknowledged by <span className="font-semibold">{getAcknowledgementData()?.userName}</span>
+                    </p>
+                    <p className="text-xs text-green-700 dark:text-green-300 mt-1">
+                      Date: {getAcknowledgementData()?.date}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <DialogFooter className="pt-4 border-t border-slate-200 dark:border-slate-700">
+            <div className="flex items-center justify-center gap-3 w-full">
             <Button
               variant="outline"
               onClick={() => setShowTermsDialog(false)}
@@ -478,18 +904,87 @@ const Layout = ({ children }: LayoutProps) => {
             >
               Close
             </Button>
+             <Button
+                onClick={handleVoiceClick}
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "rounded-lg transition-all duration-200 hover:scale-105 gap-2",
+                  isReading 
+                    ? "bg-blue-100 dark:bg-blue-900/30 border-blue-500 dark:border-blue-600 hover:bg-blue-200 dark:hover:bg-blue-800/40" 
+                    : "hover:bg-slate-100 dark:hover:bg-slate-800"
+                )}
+                title={isReading ? "Stop Reading" : "Read Aloud"}
+              >
+                {isReading ? (
+                  <VolumeX className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                ) : (
+                  <Volume2 className="h-4 w-4" />
+                )}
+                <span className="font-semibold text-xs">
+                  {isReading ? "Stop" : "Voice"}
+                </span>
+              </Button>
+              
+              <Button
+                onClick={handleTranslationToggle}
+                variant="outline"
+                size="sm"
+                className="rounded-lg transition-all duration-200 hover:scale-105 hover:bg-slate-100 dark:hover:bg-slate-800 gap-2"
+                title={isEnglishVersion ? "Switch to Malayalam" : "Switch to English"}
+              >
+                <Languages className="h-4 w-4" />
+                <span className="font-semibold text-xs">
+                  {isEnglishVersion ? "മലയാളം" : "English"}
+                </span>
+              </Button>
+              
             {!hasAcknowledgedTerms && (
               <Button
-                onClick={handleTermsAcknowledgment}
+                  onClick={handleAcknowledgeClick}
                 className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-4 sm:px-6 py-2"
               >
                 <FileCheck className="h-4 w-4 mr-2" />
                 I Acknowledge & Accept
               </Button>
             )}
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Acknowledgement Confirmation Dialog */}
+      <AlertDialog open={showAcknowledgeConfirmDialog} onOpenChange={setShowAcknowledgeConfirmDialog}>
+        <AlertDialogContent className="sm:max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-indigo-500 text-white">
+                <FileCheck className="h-5 w-5" />
+              </div>
+              Confirm Acknowledgement
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-600 dark:text-slate-300">
+              Are you sure you have read and understood all the terms and conditions of the CBMS Marriage Fund? By acknowledging, you agree to comply with all the regulations mentioned.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-3">
+            <AlertDialogCancel 
+              onClick={() => setShowAcknowledgeConfirmDialog(false)}
+              className="px-4 sm:px-6 py-2"
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleTermsAcknowledgment}
+              className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white px-4 sm:px-6 py-2"
+            >
+              <FileCheck className="h-4 w-4 mr-2" />
+              Yes, I Acknowledge
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
     </div>
   );
 };
