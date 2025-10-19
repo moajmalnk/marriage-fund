@@ -47,3 +47,16 @@ export interface TeamMember {
   responsible_member: User;
   members: User[];
 }
+
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  type: 'info' | 'success' | 'warning' | 'error' | 'payment' | 'wedding' | 'announcement';
+  isRead: boolean;
+  created_at: string;
+  user_id?: string; // If notification is for specific user
+  related_id?: string; // Related payment, fund request, etc.
+  related_type?: 'payment' | 'fund_request' | 'wedding' | 'general';
+  priority: 'low' | 'medium' | 'high';
+}

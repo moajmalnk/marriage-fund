@@ -1,4 +1,4 @@
-import { User, Payment, FundRequest, TeamMember } from '@/types';
+import { User, Payment, FundRequest, TeamMember, Notification } from '@/types';
 
 // Mock Users
 export const mockUsers: User[] = [
@@ -213,4 +213,132 @@ export const getUserTotalContributed = (userId: string) => {
   return mockPayments
     .filter(p => p.user_id === userId)
     .reduce((sum, p) => sum + p.amount, 0);
+};
+
+// Mock Notifications
+export const mockNotifications: Notification[] = [
+  {
+    id: 'n1',
+    title: 'Payment Received',
+    message: 'Jamal has successfully paid ₹45,000 for this month\'s contribution.',
+    type: 'success',
+    isRead: false,
+    created_at: '2025-01-25T10:30:00Z',
+    related_id: 'p1',
+    related_type: 'payment',
+    priority: 'medium'
+  },
+  {
+    id: 'n2',
+    title: 'Fund Request Approved',
+    message: 'Ajmal P\'s marriage fund request of ₹1,20,000 has been approved.',
+    type: 'success',
+    isRead: false,
+    created_at: '2025-01-24T14:15:00Z',
+    related_id: 'fr2',
+    related_type: 'fund_request',
+    priority: 'high'
+  },
+  {
+    id: 'n3',
+    title: 'Wedding Announcement',
+    message: 'Shareef\'s wedding is scheduled for March 5, 2025. Please prepare your contributions.',
+    type: 'wedding',
+    isRead: true,
+    created_at: '2025-01-23T09:00:00Z',
+    related_id: 'fr3',
+    related_type: 'wedding',
+    priority: 'high'
+  },
+  {
+    id: 'n4',
+    title: 'Payment Reminder',
+    message: 'Reminder: Monthly contributions are due by the end of this month.',
+    type: 'warning',
+    isRead: true,
+    created_at: '2025-01-22T16:45:00Z',
+    priority: 'medium'
+  },
+  {
+    id: 'n5',
+    title: 'System Update',
+    message: 'The CBMS Marriage Fund system has been updated with new features.',
+    type: 'info',
+    isRead: true,
+    created_at: '2025-01-21T11:20:00Z',
+    priority: 'low'
+  },
+  {
+    id: 'n6',
+    title: 'Fund Request Pending',
+    message: 'Saheer has submitted a new fund request for ₹1,20,000. Please review.',
+    type: 'info',
+    isRead: false,
+    created_at: '2025-01-20T13:30:00Z',
+    related_id: 'fr4',
+    related_type: 'fund_request',
+    priority: 'high'
+  },
+  {
+    id: 'n7',
+    title: 'Payment Overdue',
+    message: 'Isham\'s payment is overdue. Please follow up for collection.',
+    type: 'error',
+    isRead: false,
+    created_at: '2025-01-19T08:15:00Z',
+    priority: 'high'
+  },
+  {
+    id: 'n8',
+    title: 'Monthly Report',
+    message: 'January 2025 monthly report is now available. Total collected: ₹5,25,000',
+    type: 'announcement',
+    isRead: true,
+    created_at: '2025-01-18T17:00:00Z',
+    priority: 'medium'
+  },
+  {
+    id: 'n9',
+    title: 'New Member Added',
+    message: 'A new member has been added to the fund. Welcome to the CBMS Marriage Fund family!',
+    type: 'info',
+    isRead: true,
+    created_at: '2025-01-17T12:00:00Z',
+    priority: 'low'
+  },
+  {
+    id: 'n10',
+    title: 'Fund Disbursement',
+    message: 'Marriage fund of ₹1,20,000 has been disbursed to Jamal for his wedding expenses.',
+    type: 'payment',
+    isRead: false,
+    created_at: '2025-01-16T15:30:00Z',
+    related_id: 'p10',
+    related_type: 'payment',
+    priority: 'high'
+  }
+];
+
+// Helper functions for notifications
+export const getUnreadNotificationsCount = () => {
+  return mockNotifications.filter(n => !n.isRead).length;
+};
+
+export const getNotificationsByType = (type: Notification['type']) => {
+  return mockNotifications.filter(n => n.type === type);
+};
+
+export const getNotificationsByPriority = (priority: Notification['priority']) => {
+  return mockNotifications.filter(n => n.priority === priority);
+};
+
+export const markNotificationAsRead = (notificationId: string) => {
+  const notification = mockNotifications.find(n => n.id === notificationId);
+  if (notification) {
+    notification.isRead = true;
+  }
+};
+
+export const markAllNotificationsAsRead = () => {
+  mockNotifications.forEach(n => n.isRead = true);
 };

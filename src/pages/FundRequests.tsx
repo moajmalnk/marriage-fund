@@ -255,7 +255,7 @@ const FundRequests = () => {
       </div>
 
       {/* Fund Request Statistics Cards */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3">
         <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 border-blue-200 dark:border-blue-800">
           <CardContent className="p-3 sm:p-4 lg:p-6">
             <div className="flex items-center gap-2 sm:gap-3">
@@ -379,236 +379,128 @@ const FundRequests = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* Desktop Table View */}
-          <div className="hidden lg:block">
-            <div className="rounded-lg border border-slate-200 dark:border-slate-600 overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-slate-100 dark:bg-slate-800">
-                    <TableHead className="font-semibold text-slate-900 dark:text-slate-100">Member</TableHead>
-                    <TableHead className="font-semibold text-slate-900 dark:text-slate-100">Amount</TableHead>
-                    <TableHead className="font-semibold text-slate-900 dark:text-slate-100">Reason</TableHead>
-                    <TableHead className="font-semibold text-slate-900 dark:text-slate-100">Request Date</TableHead>
-                    <TableHead className="font-semibold text-slate-900 dark:text-slate-100">Status</TableHead>
-                    <TableHead className="font-semibold text-slate-900 dark:text-slate-100">Payment Info</TableHead>
-                    {(currentUser.role === 'admin' || currentUser.role === 'responsible_member') && <TableHead className="font-semibold text-slate-900 dark:text-slate-100">Actions</TableHead>}
+          <div className="rounded-lg border border-slate-200 dark:border-slate-600 overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-slate-100 dark:bg-slate-800">
+                  <TableHead className="font-semibold text-slate-900 dark:text-slate-100">Member</TableHead>
+                  <TableHead className="font-semibold text-slate-900 dark:text-slate-100">Amount</TableHead>
+                  <TableHead className="font-semibold text-slate-900 dark:text-slate-100 hidden sm:table-cell">Reason</TableHead>
+                  <TableHead className="font-semibold text-slate-900 dark:text-slate-100">Request Date</TableHead>
+                  <TableHead className="font-semibold text-slate-900 dark:text-slate-100">Status</TableHead>
+                  <TableHead className="font-semibold text-slate-900 dark:text-slate-100 hidden md:table-cell">Payment Info</TableHead>
+                  {(currentUser.role === 'admin' || currentUser.role === 'responsible_member') && (
+                    <TableHead className="font-semibold text-slate-900 dark:text-slate-100 w-12">Actions</TableHead>
+                  )}
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {visibleRequests.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={(currentUser.role === 'admin' || currentUser.role === 'responsible_member') ? 7 : 6} className="text-center py-12">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="p-3 rounded-full bg-slate-100 dark:bg-slate-800">
+                          <FileText className="h-6 w-6 text-slate-400" />
+                        </div>
+                        <p className="text-slate-500 dark:text-slate-400 font-medium">No fund requests found</p>
+                        <p className="text-sm text-slate-400 dark:text-slate-500">
+                          {currentUser.role === 'member' ? 'Submit your first fund request above' : 'No requests to review'}
+                        </p>
+                      </div>
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {visibleRequests.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={(currentUser.role === 'admin' || currentUser.role === 'responsible_member') ? 7 : 6} className="text-center py-12">
-                        <div className="flex flex-col items-center gap-3">
-                          <div className="p-3 rounded-full bg-slate-100 dark:bg-slate-800">
-                            <FileText className="h-6 w-6 text-slate-400" />
+                ) : (
+                  visibleRequests.map(request => (
+                    <TableRow key={request.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                      <TableCell className="font-medium text-slate-900 dark:text-slate-100">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Users className="h-4 w-4 text-primary" />
                           </div>
-                          <p className="text-slate-500 dark:text-slate-400 font-medium">No fund requests found</p>
-                          <p className="text-sm text-slate-400 dark:text-slate-500">
-                            {currentUser.role === 'member' ? 'Submit your first fund request above' : 'No requests to review'}
-                          </p>
+                          <div>
+                            <div className="font-medium">{request.user_name}</div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400 sm:hidden">{request.reason}</div>
+                          </div>
                         </div>
                       </TableCell>
-                    </TableRow>
-                  ) : (
-                    visibleRequests.map(request => (
-                      <TableRow key={request.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                        <TableCell className="font-medium text-slate-900 dark:text-slate-100">
-                          <div className="flex items-center gap-3">
-                            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center">
-                              <Users className="h-4 w-4 text-primary" />
-                            </div>
-                            {request.user_name}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800">
-                            ₹{request.amount.toLocaleString('en-IN')}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="max-w-xs">
-                          <p className="truncate text-slate-700 dark:text-slate-300" title={request.reason}>
-                            {request.reason}
-                          </p>
-                        </TableCell>
-                        <TableCell className="text-slate-600 dark:text-slate-400">
-                          {request.requested_date}
-                        </TableCell>
-                        <TableCell>{getStatusBadge(request)}</TableCell>
-                        <TableCell>
-                          {request.status === 'approved' ? (
-                            <div className="space-y-1">
-                              {request.payment_date && (
-                                <p className="text-xs text-slate-600 dark:text-slate-400">
-                                  Due: {new Date(request.payment_date).toLocaleDateString()}
-                                </p>
-                              )}
-                              {request.paid_amount !== undefined && (
-                                <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                                  Paid: ₹{request.paid_amount.toLocaleString('en-IN')} / ₹{request.amount.toLocaleString('en-IN')}
-                                </p>
-                              )}
-                              {request.payment_status === 'pending' && request.payment_date && (
-                                <p className="text-xs text-orange-600 dark:text-orange-400">
-                                  {getRemainingDays(request.payment_date)} days remaining
-                                </p>
-                              )}
-                            </div>
-                          ) : (
-                            <span className="text-xs text-slate-400 dark:text-slate-500">-</span>
-                          )}
-                        </TableCell>
-                        {(currentUser.role === 'admin' || currentUser.role === 'responsible_member') && (
-                          <TableCell>
-                            {request.status === 'pending' && canApproveDecline(request) && (
-                              <div className="flex gap-2">
-                                <Button 
-                                  size="sm" 
-                                  className="bg-green-600 hover:bg-green-700 text-white"
-                                  onClick={() => handleApproveRequest(request)}
-                                >
-                                  <CheckCircle className="h-3 w-3 mr-1" />
-                                  Approve
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="destructive"
-                                  className="bg-red-600 hover:bg-red-700"
-                                  onClick={() => handleDeclineRequest(request)}
-                                >
-                                  <XCircle className="h-3 w-3 mr-1" />
-                                  Decline
-                                </Button>
-                              </div>
-                            )}
-                            {request.status === 'pending' && !canApproveDecline(request) && (
-                              <span className="text-xs text-slate-500 dark:text-slate-400">
-                                Not authorized
-                              </span>
-                            )}
-                            {request.status !== 'pending' && (
-                              <span className="text-xs text-slate-500 dark:text-slate-400">
-                                {request.status === 'approved' ? 'Processed' : 'Completed'}
-                              </span>
-                            )}
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-
-          {/* Mobile Card View */}
-          <div className="lg:hidden space-y-4">
-            {visibleRequests.length === 0 ? (
-              <div className="text-center py-12">
-                <div className="flex flex-col items-center gap-3">
-                  <div className="p-3 rounded-full bg-slate-100 dark:bg-slate-800">
-                    <FileText className="h-6 w-6 text-slate-400" />
-                  </div>
-                  <p className="text-slate-500 dark:text-slate-400 font-medium">No fund requests found</p>
-                  <p className="text-sm text-slate-400 dark:text-slate-500">
-                    {currentUser.role === 'member' ? 'Submit your first fund request above' : 'No requests to review'}
-                  </p>
-                </div>
-              </div>
-            ) : (
-              visibleRequests.map(request => (
-                <Card key={request.id} className="bg-gradient-to-br from-white/80 to-slate-50/80 dark:from-slate-800/80 dark:to-slate-700/80 border-slate-200 dark:border-slate-600">
-                  <CardContent className="p-4">
-                    {/* Header with Member and Status */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          <Users className="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-slate-900 dark:text-slate-100">{request.user_name}</h3>
-                          <p className="text-sm text-slate-600 dark:text-slate-400">{request.requested_date}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        {getStatusBadge(request)}
-                      </div>
-                    </div>
-
-                    {/* Amount and Reason */}
-                    <div className="space-y-3 mb-4">
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Amount</span>
+                      <TableCell>
                         <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-300 dark:border-green-800">
                           ₹{request.amount.toLocaleString('en-IN')}
                         </Badge>
-                      </div>
-                      <div>
-                        <span className="text-sm font-medium text-slate-600 dark:text-slate-400">Reason</span>
-                        <p className="text-sm text-slate-700 dark:text-slate-300 mt-1">{request.reason}</p>
-                      </div>
-                    </div>
-
-                    {/* Payment Info */}
-                    {request.status === 'approved' && (
-                      <div className="space-y-2 mb-4 p-3 rounded-lg bg-slate-50 dark:bg-slate-800/50">
-                        <h4 className="text-sm font-medium text-slate-700 dark:text-slate-300">Payment Information</h4>
-                        {request.payment_date && (
-                          <p className="text-xs text-slate-600 dark:text-slate-400">
-                            Due: {new Date(request.payment_date).toLocaleDateString()}
-                          </p>
-                        )}
-                        {request.paid_amount !== undefined && (
-                          <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                            Paid: ₹{request.paid_amount.toLocaleString('en-IN')} / ₹{request.amount.toLocaleString('en-IN')}
-                          </p>
-                        )}
-                        {request.payment_status === 'pending' && request.payment_date && (
-                          <p className="text-xs text-orange-600 dark:text-orange-400">
-                            {getRemainingDays(request.payment_date)} days remaining
-                          </p>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Actions for Admins and Responsible Members */}
-                    {(currentUser.role === 'admin' || currentUser.role === 'responsible_member') && (
-                      <div className="pt-3 border-t border-slate-200 dark:border-slate-600">
-                        {request.status === 'pending' && canApproveDecline(request) ? (
-                          <div className="flex gap-2">
-                            <Button 
-                              size="sm" 
-                              className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                              onClick={() => handleApproveRequest(request)}
-                            >
-                              <CheckCircle className="h-4 w-4 mr-2" />
-                              Approve
-                            </Button>
-                            <Button 
-                              size="sm" 
-                              variant="destructive"
-                              className="flex-1 bg-red-600 hover:bg-red-700"
-                              onClick={() => handleDeclineRequest(request)}
-                            >
-                              <XCircle className="h-4 w-4 mr-2" />
-                              Decline
-                            </Button>
+                      </TableCell>
+                      <TableCell className="max-w-xs hidden sm:table-cell">
+                        <p className="truncate text-slate-700 dark:text-slate-300" title={request.reason}>
+                          {request.reason}
+                        </p>
+                      </TableCell>
+                      <TableCell className="text-slate-600 dark:text-slate-400">
+                        {request.requested_date}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(request)}</TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        {request.status === 'approved' ? (
+                          <div className="space-y-1">
+                            {request.payment_date && (
+                              <p className="text-xs text-slate-600 dark:text-slate-400">
+                                Due: {new Date(request.payment_date).toLocaleDateString()}
+                              </p>
+                            )}
+                            {request.paid_amount !== undefined && (
+                              <p className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                                Paid: ₹{request.paid_amount.toLocaleString('en-IN')} / ₹{request.amount.toLocaleString('en-IN')}
+                              </p>
+                            )}
+                            {request.payment_status === 'pending' && request.payment_date && (
+                              <p className="text-xs text-orange-600 dark:text-orange-400">
+                                {getRemainingDays(request.payment_date)} days remaining
+                              </p>
+                            )}
                           </div>
-                        ) : request.status === 'pending' && !canApproveDecline(request) ? (
-                          <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
-                            Not authorized to approve/decline
-                          </p>
                         ) : (
-                          <p className="text-xs text-slate-500 dark:text-slate-400 text-center">
-                            {request.status === 'approved' ? 'Request Processed' : 'Request Completed'}
-                          </p>
+                          <span className="text-xs text-slate-400 dark:text-slate-500">-</span>
                         )}
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </div>
+                      </TableCell>
+                      {(currentUser.role === 'admin' || currentUser.role === 'responsible_member') && (
+                        <TableCell>
+                          {request.status === 'pending' && canApproveDecline(request) && (
+                            <div className="flex gap-1">
+                              <Button 
+                                size="sm" 
+                                className="bg-green-600 hover:bg-green-700 text-white text-xs px-2 py-1"
+                                onClick={() => handleApproveRequest(request)}
+                              >
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                <span className="hidden sm:inline">Approve</span>
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="destructive"
+                                className="bg-red-600 hover:bg-red-700 text-xs px-2 py-1"
+                                onClick={() => handleDeclineRequest(request)}
+                              >
+                                <XCircle className="h-3 w-3 mr-1" />
+                                <span className="hidden sm:inline">Decline</span>
+                              </Button>
+                            </div>
+                          )}
+                          {request.status === 'pending' && !canApproveDecline(request) && (
+                            <span className="text-xs text-slate-500 dark:text-slate-400">
+                              Not authorized
+                            </span>
+                          )}
+                          {request.status !== 'pending' && (
+                            <span className="text-xs text-slate-500 dark:text-slate-400">
+                              {request.status === 'approved' ? 'Processed' : 'Completed'}
+                            </span>
+                          )}
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+              </Table>
+            </div>
         </CardContent>
       </Card>
 

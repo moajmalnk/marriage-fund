@@ -21,10 +21,14 @@ import {
   Volume2,
   VolumeX,
   Languages,
+  Bell,
+  Maximize,
+  Minimize,
 } from 'lucide-react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { cn } from '@/lib/utils';
 import { mockUsers } from '@/lib/mockData';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -41,6 +45,7 @@ const Layout = ({ children }: LayoutProps) => {
   const [hasAcknowledgedTerms, setHasAcknowledgedTerms] = useState(false);
   const [isEnglishVersion, setIsEnglishVersion] = useState(false);
   const [isReading, setIsReading] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Handle responsive behavior
   useEffect(() => {
@@ -51,6 +56,27 @@ const Layout = ({ children }: LayoutProps) => {
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Handle fullscreen state
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).msFullscreenElement
+      ));
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('msfullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('msfullscreenchange', handleFullscreenChange);
+    };
   }, []);
 
   // Check if terms have been acknowledged
@@ -356,6 +382,32 @@ const Layout = ({ children }: LayoutProps) => {
     setIsEnglishVersion(!isEnglishVersion);
   };
 
+  const handleFullscreenToggle = async () => {
+    try {
+      if (isFullscreen) {
+        // Exit fullscreen
+        if (document.exitFullscreen) {
+          await document.exitFullscreen();
+        } else if ((document as any).webkitExitFullscreen) {
+          await (document as any).webkitExitFullscreen();
+        } else if ((document as any).msExitFullscreen) {
+          await (document as any).msExitFullscreen();
+        }
+      } else {
+        // Enter fullscreen
+        if (document.documentElement.requestFullscreen) {
+          await document.documentElement.requestFullscreen();
+        } else if ((document.documentElement as any).webkitRequestFullscreen) {
+          await (document.documentElement as any).webkitRequestFullscreen();
+        } else if ((document.documentElement as any).msRequestFullscreen) {
+          await (document.documentElement as any).msRequestFullscreen();
+        }
+      }
+    } catch (error) {
+      console.log('Fullscreen toggle failed:', error);
+    }
+  };
+
   // Get responsible members and regular members from actual user data
   const responsibleMembers = mockUsers.filter(user => user.role === 'responsible_member');
   const regularMembers = mockUsers.filter(user => user.role === 'member');
@@ -381,6 +433,7 @@ const Layout = ({ children }: LayoutProps) => {
     { name: 'Payments', href: '/payments', icon: CreditCard, color: 'text-green-600' },
     { name: 'Team', href: '/team', icon: Users, color: 'text-purple-600' },
     { name: 'Fund Requests', href: '/fund-requests', icon: Heart, color: 'text-red-600' },
+    { name: 'Notifications', href: '/notifications', icon: Bell, color: 'text-amber-600' },
     { name: 'Manage Users', href: '/manage-users', icon: Settings, color: 'text-orange-600' },
     { name: 'Terms of Use', href: '#', icon: FileCheck, color: 'text-indigo-600', isAction: true },
   ];
@@ -390,6 +443,7 @@ const Layout = ({ children }: LayoutProps) => {
     { name: 'Payments', href: '/payments', icon: CreditCard, color: 'text-green-600' },
     { name: 'Team', href: '/team', icon: Users, color: 'text-purple-600' },
     { name: 'Fund Requests', href: '/fund-requests', icon: Heart, color: 'text-red-600' },
+    { name: 'Notifications', href: '/notifications', icon: Bell, color: 'text-amber-600' },
     { name: 'Terms of Use', href: '#', icon: FileCheck, color: 'text-indigo-600', isAction: true },
   ];
 
@@ -414,7 +468,9 @@ const Layout = ({ children }: LayoutProps) => {
               </p>
             </div>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+          </div>
         </div>
       </div>
 
@@ -435,8 +491,8 @@ const Layout = ({ children }: LayoutProps) => {
                     setMobileMenuOpen(false);
                   }}
                   className={cn(
-                    "group relative flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all duration-300 ease-out w-full text-left",
-                    "hover:scale-[1.02] active:scale-[0.98]",
+                    "group relative flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all duration-300 ease-out w-full text-left navigation-item",
+                    "hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-background",
                     "bg-white/60 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-slate-700/80 border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-sm"
                   )}
                 >
@@ -450,8 +506,8 @@ const Layout = ({ children }: LayoutProps) => {
                   to={item.href}
                   onClick={() => setMobileMenuOpen(false)}
                   className={cn(
-                    "group relative flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all duration-300 ease-out",
-                    "hover:scale-[1.02] active:scale-[0.98]",
+                    "group relative flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all duration-300 ease-out navigation-item",
+                    "hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-background",
                     isActive
                       ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-xl shadow-blue-500/25 border border-blue-400/20"
                       : "bg-white/60 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:bg-white/80 dark:hover:bg-slate-700/80 border border-slate-200/50 dark:border-slate-700/50 backdrop-blur-sm"
@@ -544,6 +600,25 @@ const Layout = ({ children }: LayoutProps) => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleFullscreenToggle}
+                  className="hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all duration-200"
+                >
+                  {isFullscreen ? (
+                    <Minimize className="h-4 w-4" />
+                  ) : (
+                    <Maximize className="h-4 w-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{isFullscreen ? "Exit Fullscreen (F11)" : "Enter Fullscreen (F11)"}</p>
+              </TooltipContent>
+            </Tooltip>
             <ThemeToggle />
             {isMobile && (
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>

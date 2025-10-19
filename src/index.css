@@ -107,10 +107,7 @@ All colors MUST be HSL.
     padding: 0;
     width: 100%;
     height: 100%;
-    overflow: hidden;
-    position: fixed;
-    top: 0;
-    left: 0;
+    overflow: auto;
   }
 
   body {
@@ -119,11 +116,8 @@ All colors MUST be HSL.
     margin: 0;
     padding: 0;
     width: 100%;
-    height: 100vh;
-    overflow: hidden;
-    position: fixed;
-    top: 0;
-    left: 0;
+    min-height: 100vh;
+    overflow: auto;
   }
 
   /* Privacy mode blur effect */
@@ -144,19 +138,31 @@ All colors MUST be HSL.
     appearance: none;
   }
 
-  /* Force fullscreen mode */
+  /* Allow text selection for better UX */
   html {
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
   }
 
-  /* Hide any browser chrome */
+  /* Allow text selection and copy-paste */
   body {
-    -webkit-touch-callout: none;
+    -webkit-touch-callout: default;
+    -webkit-user-select: text;
+    -khtml-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+  }
+
+  /* Prevent text selection only on specific UI elements */
+  button, 
+  .no-select,
+  [role="button"],
+  .sidebar-nav,
+  .navigation-item {
     -webkit-user-select: none;
-    -khtml-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
     user-select: none;
@@ -463,6 +469,32 @@ All colors MUST be HSL.
   [tabindex] {
     min-height: 44px;
     min-width: 44px;
+  }
+
+  /* Improve text selection experience */
+  p, 
+  span, 
+  div:not(.no-select):not(.navigation-item):not([role="button"]):not(button):not(.sidebar-nav),
+  h1, h2, h3, h4, h5, h6,
+  li,
+  td, th {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+  }
+
+  /* Better focus indicators */
+  .focus-visible:focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: 2px;
+  }
+
+  /* Smooth transitions for better UX */
+  * {
+    transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
   }
 
   /* Mobile-first responsive design */

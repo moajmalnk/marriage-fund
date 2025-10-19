@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import Payments from "./pages/Payments";
 import Team from "./pages/Team";
 import FundRequests from "./pages/FundRequests";
+import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
 import ManageUsers from "./pages/ManageUsers";
 import Install from "./pages/Install";
@@ -31,46 +32,47 @@ const queryClient = new QueryClient({
 function AppContent() {
   usePrivacyMode();
   
-  // Handle fullscreen request on user interaction
+  // Optional fullscreen functionality - only on specific user request
   React.useEffect(() => {
-    const handleUserInteraction = async () => {
-      try {
-        // Check if fullscreen is already active
-        if (document.fullscreenElement || 
-            (document as any).webkitFullscreenElement || 
-            (document as any).msFullscreenElement) {
-          return;
-        }
-
-        // Check if fullscreen is supported
-        if (document.documentElement.requestFullscreen) {
-          await document.documentElement.requestFullscreen();
-        } else if ((document.documentElement as any).webkitRequestFullscreen) {
-          await (document.documentElement as any).webkitRequestFullscreen();
-        } else if ((document.documentElement as any).msRequestFullscreen) {
-          await (document.documentElement as any).msRequestFullscreen();
-        } else {
-          console.log('Fullscreen API not supported in this browser');
-        }
-      } catch (error) {
-        if (error instanceof Error) {
-          console.log('Fullscreen request failed:', error.message);
-        } else {
-          console.log('Fullscreen not supported or denied');
+    const handleFullscreenRequest = async (event: KeyboardEvent) => {
+      // Only trigger fullscreen on F11 key press or Ctrl+Shift+F
+      if (event.key === 'F11' || (event.ctrlKey && event.shiftKey && event.key === 'F')) {
+        event.preventDefault();
+        
+        try {
+          // Check if fullscreen is already active
+          if (document.fullscreenElement || 
+              (document as any).webkitFullscreenElement || 
+              (document as any).msFullscreenElement) {
+            // Exit fullscreen
+            if (document.exitFullscreen) {
+              await document.exitFullscreen();
+            } else if ((document as any).webkitExitFullscreen) {
+              await (document as any).webkitExitFullscreen();
+            } else if ((document as any).msExitFullscreen) {
+              await (document as any).msExitFullscreen();
+            }
+          } else {
+            // Enter fullscreen
+            if (document.documentElement.requestFullscreen) {
+              await document.documentElement.requestFullscreen();
+            } else if ((document.documentElement as any).webkitRequestFullscreen) {
+              await (document.documentElement as any).webkitRequestFullscreen();
+            } else if ((document.documentElement as any).msRequestFullscreen) {
+              await (document.documentElement as any).msRequestFullscreen();
+            }
+          }
+        } catch (error) {
+          console.log('Fullscreen toggle failed:', error);
         }
       }
     };
 
-    // Add event listeners for user interactions
-    const events = ['click', 'touchstart', 'keydown'];
-    events.forEach(event => {
-      document.addEventListener(event, handleUserInteraction, { once: true });
-    });
+    // Add keyboard event listener for fullscreen toggle
+    document.addEventListener('keydown', handleFullscreenRequest);
 
     return () => {
-      events.forEach(event => {
-        document.removeEventListener(event, handleUserInteraction);
-      });
+      document.removeEventListener('keydown', handleFullscreenRequest);
     };
   }, []);
   
@@ -89,6 +91,7 @@ function AppContent() {
         <Route path="/payments" element={<Layout><Payments /></Layout>} />
         <Route path="/team" element={<Layout><Team /></Layout>} />
         <Route path="/fund-requests" element={<Layout><FundRequests /></Layout>} />
+        <Route path="/notifications" element={<Layout><Notifications /></Layout>} />
         <Route path="/profile" element={<Layout><Profile /></Layout>} />
         <Route path="/manage-users" element={<Layout><ManageUsers /></Layout>} />
         <Route path="*" element={<NotFound />} />
