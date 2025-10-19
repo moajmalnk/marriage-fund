@@ -21,11 +21,14 @@ import {
   XCircle,
   Calendar,
   Gift,
-  PartyPopper
+  PartyPopper,
+  Share2,
+  MessageSquare
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 const Dashboard = () => {
   const { currentUser, isLoading } = useAuth();
@@ -90,6 +93,31 @@ const Dashboard = () => {
     .filter(notification => notification.type === 'wedding')
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, 3); // Show latest 3 announcements
+
+  // Check if user can share announcements (admin or responsible member)
+  const canShareAnnouncements = currentUser.role === 'admin' || currentUser.role === 'responsible_member';
+
+  // Message template for collecting contributions
+  const contributionMessageTemplate = `🎉 Wedding Announcement - Contribution Required
+
+Dear CBMS Family,
+
+We have exciting news! A wedding celebration is coming up and we need your support.
+
+📅 Wedding Date: 23rd November 2025
+👰🤵 Couple: Shakir Jamal && ... 
+💰 Contribution Amount: ₹5,000 per member
+
+This contribution helps us support our community members during their special moments. Your participation strengthens our bond as a family.
+
+Please prepare your contribution of ₹5,000 and submit it through the CBMS Marriage Fund system.
+
+Thank you for your continued support and participation in our community fund.
+
+Best regards,
+CBMS Marriage Fund Team
+
+#CBMSFamily #WeddingCelebration #CommunitySupport`;
 
   // Rank icon helper
   const getRankIcon = (rank: number) => {
@@ -283,15 +311,89 @@ const Dashboard = () => {
             {/* Wedding Announcements */}
             <Card className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-700 border-slate-200 dark:border-slate-600">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-slate-900 dark:text-slate-100">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-pink-500 to-rose-600 text-white">
-              <Heart className="h-5 w-5" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-pink-500 to-rose-600 text-white">
+                <Heart className="h-5 w-5" />
+              </div>
+              <div>
+                <CardTitle className="text-slate-900 dark:text-slate-100">
+                  Wedding Announcements
+                </CardTitle>
+                <CardDescription className="text-slate-700 dark:text-slate-300">
+                  Latest wedding announcements and upcoming celebrations
+                </CardDescription>
+              </div>
             </div>
-            Wedding Announcements
-          </CardTitle>
-          <CardDescription className="text-slate-700 dark:text-slate-300">
-            Latest wedding announcements and upcoming celebrations
-          </CardDescription>
+            
+            {/* Share Button for Admins and Responsible Members */}
+            {canShareAnnouncements && (
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="h-9 px-3 bg-pink-50 hover:bg-pink-100 dark:bg-pink-950/30 dark:hover:bg-pink-900/40 border-pink-200 dark:border-pink-800 text-pink-700 dark:text-pink-300 hover:text-pink-800 dark:hover:text-pink-200"
+                  >
+                    <Share2 className="h-4 w-4 mr-2" />
+                    Share
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <MessageSquare className="h-5 w-5 text-pink-600" />
+                      Share Wedding Announcement
+                    </DialogTitle>
+                    <DialogDescription>
+                      Use this template to share wedding announcements and collect contributions from members
+                    </DialogDescription>
+                  </DialogHeader>
+                  
+                  <div className="space-y-4">
+                    <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg border">
+                      <h4 className="font-semibold text-slate-900 dark:text-slate-100 mb-2">
+                        Message Template:
+                      </h4>
+                      <div className="bg-white dark:bg-slate-900 p-4 rounded border text-sm font-mono whitespace-pre-wrap text-slate-700 dark:text-slate-300">
+                        {contributionMessageTemplate}
+                      </div>
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Button 
+                        onClick={() => {
+                          navigator.clipboard.writeText(contributionMessageTemplate);
+                          // You could add a toast notification here
+                        }}
+                        className="flex-1"
+                      >
+                        <Share2 className="h-4 w-4 mr-2" />
+                        Copy to Clipboard
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={() => {
+                          const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(contributionMessageTemplate)}`;
+                          window.open(whatsappUrl, '_blank');
+                        }}
+                        className="flex-1"
+                      >
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Share on WhatsApp
+                      </Button>
+                    </div>
+                    
+                    <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <p className="text-sm text-blue-800 dark:text-blue-200">
+                        <strong>Note:</strong> Remember to replace [Wedding Date] and [Couple Names] with the actual details before sharing.
+                      </p>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
